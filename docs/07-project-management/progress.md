@@ -1,7 +1,7 @@
 ---
 title: PanelForge project progress
 status: Active
-version: 0.1
+version: 0.2
 last_updated: 2026-11-10
 source_of_truth: true
 ---
@@ -17,16 +17,17 @@ Phase 0 — Architecture and Documentation Baseline.
 | Repository conventions | Complete | Foundation exists |
 | Product definition | Approved | Product direction/personas |
 | MVP scope | Approved | P0/P1/deferred scope |
-| Technology stack | Proposed | OIDC provider and some infra open |
-| System architecture | Proposed | Modular monolith, web + API |
-| Engine contracts | Proposed | Core boundaries documented |
-| Data model and ERD | Proposed | Logical model; exact schema pending |
-| Security and tenancy | Proposed | Invariants and negative tests |
-| API conventions | Proposed | Endpoint inventory evolves with implementation |
-| Testing strategy | Proposed | Initial coverage/test gates |
+| Technology stack | Proposed | Identity provider and hosting details open |
+| System architecture | Proposed | Modular monolith; one web app and one API |
+| Engine contracts | Proposed | Metadata, registry, renderer, query, policy and publishing |
+| Data model and ERD | Proposed | Logical model; physical schema pending |
+| Security and tenancy | Proposed | Invariants and negative tests documented |
+| API conventions | Proposed | Initial REST conventions |
+| Testing strategy | Proposed | Test layers and initial coverage gates |
 | CI/CD and deployment | Proposed | Environments and PR gates |
-| Versioning strategy | Proposed | Package/API/platform/snapshot versions |
-| Roadmap and backlog | Proposed | Initial implementation sequence |
+| Versioning strategy | Proposed | Package/API/platform/snapshot versioning |
+| ADRs | Proposed | Six initial decision records |
+| Roadmap/backlog | Proposed | Implementation sequence and acceptance criteria |
 
 ## Phase 0 exit criteria
 - [ ] Approve technology stack and architecture.
@@ -39,7 +40,7 @@ Phase 0 — Architecture and Documentation Baseline.
 - [ ] Verify document links and terminology.
 - [ ] Confirm no blocker remains for Phase 1.
 
-Progress is based on reviewed/approved deliverables, not merely files created. Drafting does not mean an architectural decision is approved.
+A drafted document is not the same as an approved architectural decision. Progress reflects reviewed/approved deliverables, not file count.
 
 ## Next milestone
 Phase 1: monorepo skeleton, local environment, running web and API applications.
