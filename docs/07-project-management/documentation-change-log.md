@@ -1,7 +1,7 @@
 ---
 title: PanelForge documentation change log
 status: Active
-version: 0.1
+version: 0.2
 last_updated: 2026-11-10
 source_of_truth: true
 ---
@@ -20,8 +20,10 @@ Git history is authoritative for exact file changes. This log records meaningful
 | 2026-11-10 | API | REST conventions and OpenAPI expectations |
 | 2026-11-10 | Quality | Testing, coverage and CI/CD strategy |
 | 2026-11-10 | Delivery | Versioning, roadmap, backlog and progress tracker |
+| 2026-11-10 | Phase 1 | Record verified Next.js/NestJS application scaffold and begin PostgreSQL/Prisma local infrastructure |
 
 ## Change procedure
+
 1. Update the authoritative document.
 2. Add/update ADR for material architecture changes.
 3. Update affected documents and links in the same PR.

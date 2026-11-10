@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: panelforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: panelforge
+      POSTGRES_PASSWORD: panelforge_dev
+      POSTGRES_DB: panelforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - panelforge_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U panelforge -d panelforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  panelforge_postgres_data:

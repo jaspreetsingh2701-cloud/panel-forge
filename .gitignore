@@ -30,6 +30,12 @@ coverage/
 playwright-report/
 test-results/
 
+# Generated Prisma Client
+apps/api/src/generated/
+
 # Local tooling
 .cache/
 .tmp/
+
+# Next.js generated environment and type declarations
+**/next-env.d.ts
