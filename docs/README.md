@@ -1,45 +1,40 @@
 # PanelForge documentation
 
-This directory is the source of truth for PanelForge product requirements, architecture, data design, engineering practices and project progress.
+This directory is the canonical source of truth for product, architecture, data, API, engineering quality and delivery decisions.
 
 ## Documentation map
 
-| Section | Purpose | Planned documents |
+| Section | Purpose | Key documents |
 |---|---|---|
-| `00-product/` | Product definition and boundaries | Product requirements, MVP scope, glossary |
-| `01-architecture/` | System-level technical design | System architecture, technology stack, multi-tenancy, security |
-| `02-database/` | Persistence and schema design | Database design, ERD, metadata schema, migrations |
-| `03-engines/` | Core platform engines | Metadata, rendering, query, component registry, data-source engine |
-| `04-features/` | User-facing platform capabilities | Visual builder, forms, tables, RBAC, page builder, workflows |
-| `05-api/` | PanelForge API contracts | API conventions and generated API reference |
-| `06-operations/` | Quality and production operations | Testing, deployment, monitoring, backup and recovery |
-| `07-project-management/` | Delivery and change tracking | Roadmap, progress, backlog, known issues, documentation change log |
-| `adr/` | Architecture decisions | Numbered Architecture Decision Records |
-
-Documents will be added as the relevant design decisions are reviewed. We will not create empty documents simply to fill the folder structure.
-
-## Source-of-truth rules
-
-1. This repository, not chat history, is the canonical project record.
-2. A document must identify whether it is a proposal, approved decision, or superseded record.
-3. Architecture changes that materially affect the system must have an ADR.
-4. Update affected documentation in the same pull request as the related code or decision.
-5. Do not silently rewrite historical decisions. Supersede them with a new ADR.
-6. When two documents disagree, resolve the conflict and record the correction; do not leave competing definitions in place.
+| `00-product/` | Product direction and scope | Product definition, MVP scope |
+| `01-architecture/` | System design and security | Technology stack, system architecture, engine contracts, security and tenant isolation |
+| `02-database/` | Persistence and data integrity | Data model and storage, logical ERD |
+| `03-engines/` | Detailed engine specifications | To be added with implementation design |
+| `04-features/` | User-facing feature specifications | To be added before corresponding feature implementation |
+| `05-api/` | API contract conventions | API conventions |
+| `06-operations/` | Quality and production operations | Testing strategy, deployment and CI/CD |
+| `07-project-management/` | Delivery and change tracking | Phase 0 baseline, roadmap, backlog, progress, documentation change log, versioning |
+| `adr/` | Architecture decisions | ADR-001 through ADR-006 and template |
 
 ## Suggested reading order
+1. [Product definition](00-product/product-definition.md) and [MVP scope](00-product/mvp-scope.md).
+2. [Technology stack](01-architecture/technology-stack.md) and [system architecture](01-architecture/system-architecture.md).
+3. [Engine contracts](01-architecture/engine-contracts.md) and [security model](01-architecture/security-and-tenant-isolation.md).
+4. [Data model](02-database/data-model-and-storage.md) and [logical ERD](02-database/erd.md).
+5. [API conventions](05-api/api-conventions.md).
+6. [Testing](06-operations/testing-strategy.md), [CI/CD](06-operations/deployment-and-ci-cd.md) and [versioning](07-project-management/versioning-strategy.md).
+7. [Roadmap](07-project-management/roadmap.md), [backlog](07-project-management/backlog.md) and [progress](07-project-management/progress.md).
 
-1. Product requirements and MVP scope.
-2. System architecture and technology stack.
-3. Multi-tenancy and security architecture.
-4. Database and metadata schema.
-5. Core engines and feature specifications.
-6. API and operations documentation.
-7. Roadmap and progress tracker.
+## Source-of-truth and change rules
+1. This repository, not chat history, is the canonical project record.
+2. Every authoritative document states whether it is Proposed, Approved, Implemented or Superseded.
+3. Material architectural changes require a numbered ADR.
+4. Update impacted documentation in the same pull request as the related code/decision.
+5. Never erase accepted decision history; supersede it with a new ADR.
+6. Resolve contradictions rather than allowing competing definitions to persist.
 
 ## Status definitions
-
-- **Proposed:** under discussion; not yet approved.
-- **Approved:** reviewed and accepted as the current direction.
+- **Proposed:** documented for review; not yet accepted.
+- **Approved:** reviewed and accepted as current direction.
 - **Implemented:** reflected in code and verified.
 - **Superseded:** replaced by a later decision or document.
