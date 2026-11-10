@@ -96,7 +96,7 @@ Suggested route areas:
 /organisations/[organisationSlug]/applications
 /organisations/[organisationSlug]/applications/[appId]/builder
 /preview/[appId]
-/ app/[applicationSlug]/*
+/app/[applicationSlug]/*
 ```
 
 The route naming is illustrative and may change during implementation. The published route must resolve the correct tenant and application from trusted server-side context.
