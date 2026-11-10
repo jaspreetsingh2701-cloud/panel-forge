@@ -1,7 +1,7 @@
 ---
 title: PanelForge project progress
 status: Active
-version: 0.4
+version: 0.5
 last_updated: 2026-11-10
 source_of_truth: true
 ---
@@ -54,7 +54,7 @@ Documentation baseline merged into main. Product definition and MVP scope are ap
 - Root development, build and typecheck task wiring.
 
 ## Progress
-Phase 1 is tracked by completed acceptance criteria, not by the number of files created. Batch 2 still requires dependency installation, local runtime checks and a reviewed merge before it is marked complete.
+**Phase 1: 20% (provisional).** The workspace foundation is merged and the web/API application skeletons are drafted. Batch 2 still requires dependency installation, local runtime checks and a reviewed merge before it is marked complete. Progress will be revised against acceptance criteria as each batch is validated.
 
 ## Next milestone
 Batch 3: PostgreSQL, Prisma and local Docker environment.
