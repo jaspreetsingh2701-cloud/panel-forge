@@ -1,18 +1,18 @@
 ---
 title: PanelForge data model and storage
 status: Proposed
-version: 0.1
+version: 0.2
 last_updated: 2026-11-10
 owner: Project maintainers
 source_of_truth: true
-related_adrs: []
+related_adrs: [ADR-002]
 ---
 
 # PanelForge data model and storage
 
 ## 1. Purpose
 
-This document proposes the logical data model and storage strategy for the PanelForge MVP. It is a design baseline, not a replacement for the eventual Prisma schema, migrations or reviewed ERD.
+This document proposes the logical data model and storage strategy for the PanelForge MVP. It is a design baseline, not a replacement for the Prisma schema, migrations or reviewed ERD.
 
 The design uses PostgreSQL for platform data and managed application records. Relational columns represent stable platform concepts; JSONB stores validated user-defined attributes and suitable versioned configuration documents.
 
@@ -184,7 +184,21 @@ Avoid storing passwords, access tokens, connector secrets or unnecessary persona
 - Evaluate PostgreSQL row-level security as defence in depth, not as a substitute for application checks.
 - Back up the database and test restoration before production use.
 
-## 11. Deferred storage approaches
+## 11. Initial implementation slice
+
+The first Prisma schema intentionally establishes only the identity and tenancy foundation:
+
+| Prisma model | PostgreSQL table | Purpose |
+|---|---|---|
+| `User` | `users` | Platform user identity, unique email and optional display name |
+| `Tenant` | `tenants` | Organisation/workspace with unique slug and lifecycle status |
+| `TenantMember` | `tenant_members` | User-to-tenant membership with status and unique tenant/user pair |
+
+The initial schema uses UUID primary keys, timestamp columns and relational foreign keys. Membership records reference both a user and tenant. Deleting a user or tenant cascades to its membership rows; audit history and published snapshots will use stricter retention rules when those models are introduced.
+
+The Prisma schema is the implementation source for these models. The initial migration is generated and reviewed as part of the database-foundation implementation; the broader logical model in this document remains a forward-looking design, not a claim that every listed entity already exists in the database.
+
+## 12. Deferred storage approaches
 
 Not part of the first MVP:
 - Dedicated physical tables for every tenant-defined resource.
@@ -196,7 +210,7 @@ Not part of the first MVP:
 
 These options may be reconsidered when workload, compliance or customer isolation requirements justify their operational cost.
 
-## 12. Related documents
+## 13. Related documents
 
 - [System architecture](../01-architecture/system-architecture.md)
 - [Engine contracts](../01-architecture/engine-contracts.md)
@@ -210,3 +224,4 @@ These options may be reconsidered when workload, compliance or customer isolatio
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-11-10 | Initial proposed logical data model and storage strategy |
+| 0.2 | 2026-11-10 | Record the initial Prisma identity and tenancy schema slice |
