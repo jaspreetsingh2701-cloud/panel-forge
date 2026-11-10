@@ -1,7 +1,7 @@
 ---
 title: PanelForge Product Definition
-status: Proposed
-version: 0.1.0
+status: Approved
+version: 1.0.0
 last_updated: 2026-11-10
 owner: Project maintainers
 source_of_truth: true
