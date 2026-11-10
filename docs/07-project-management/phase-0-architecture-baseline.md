@@ -1,104 +1,84 @@
 ---
 title: PanelForge Phase 0 architecture baseline
-status: Proposed
-version: 0.1
+status: Active
+version: 0.2
 last_updated: 2026-11-10
-owner: Project maintainers
 source_of_truth: true
-related_adrs: []
 ---
 
 # PanelForge Phase 0 architecture baseline
 
-## 1. Purpose
+## Purpose
+Track the complete documentation baseline required before implementation. The repository is canonical; conversation history is not a substitute for committed project decisions.
 
-This document tracks the architecture and documentation baseline required before implementation begins. The repository is the source of truth; conversation history is not a substitute for committed project decisions.
-
-## 2. Current progress
+## Deliverable status
 
 | Work item | Status | Artifact |
 |---|---|---|
-| Repository and documentation foundation | Complete | Root README and documentation conventions |
+| Repository and documentation conventions | Complete | [Documentation index](../README.md) |
 | Product definition | Approved | [Product definition](../00-product/product-definition.md) |
 | MVP scope | Approved | [MVP scope](../00-product/mvp-scope.md) |
 | Technology stack | Proposed | [Technology stack](../01-architecture/technology-stack.md) |
 | System architecture | Proposed | [System architecture](../01-architecture/system-architecture.md) |
 | Engine contracts | Proposed | [Engine contracts](../01-architecture/engine-contracts.md) |
-| Logical data model and storage | Proposed | [Data model and storage](../02-database/data-model-and-storage.md) |
-| Security and tenant isolation | Proposed | [Security and tenant isolation](../01-architecture/security-and-tenant-isolation.md) |
-| Detailed ERD and constraints | Pending | To be produced after logical model review |
-| ADRs for material architecture decisions | Pending | To be created when decisions are accepted |
-| API conventions and initial OpenAPI plan | Pending | Before API implementation |
-| Testing and CI/CD baseline | Pending | Before implementation gates |
-| Roadmap, backlog and change log | Pending | To be completed in Phase 0 |
+| Data model and storage | Proposed | [Data model](../02-database/data-model-and-storage.md) |
+| Logical ERD | Proposed | [ERD](../02-database/erd.md) |
+| Security and tenant isolation | Proposed | [Security](../01-architecture/security-and-tenant-isolation.md) |
+| API conventions | Proposed | [API conventions](../05-api/api-conventions.md) |
+| Testing strategy | Proposed | [Testing](../06-operations/testing-strategy.md) |
+| CI/CD and deployment | Proposed | [Deployment](../06-operations/deployment-and-ci-cd.md) |
+| Versioning strategy | Proposed | [Versioning](versioning-strategy.md) |
+| ADRs | Proposed | [ADR index](../adr/README.md) |
+| Roadmap and backlog | Proposed | [Roadmap](roadmap.md), [backlog](backlog.md) |
+| Progress and change log | Active | [Progress](progress.md), [change log](documentation-change-log.md) |
 
-## 3. Architecture decisions proposed so far
+## Proposed architecture baseline
+- Modular monolith.
+- One Next.js web app for builder, preview and published runtime routes.
+- One NestJS API app with domain-oriented modules.
+- PostgreSQL for platform data and managed records; Prisma as proposed ORM/migration tool.
+- Relational columns for stable platform entities; JSONB for validated dynamic values/configuration.
+- Curated typed component registry; no arbitrary customer JavaScript or SQL.
+- Backend-enforced tenant isolation, resource/action/field/record permissions.
+- Immutable published configuration snapshots with atomic activation and rollback.
+- OIDC-compatible identity provider; exact provider and token/session topology remain open.
+- Worker process, Redis and separate runtime deployment deferred until justified.
 
-- Start with a modular monolith.
-- Use one Next.js web application for builder, preview and published runtime routes.
-- Use one NestJS API application.
-- Use PostgreSQL for platform metadata and managed records.
-- Use relational columns for stable platform entities and JSONB for validated dynamic record values/configuration.
-- Use a curated component registry; never execute arbitrary customer JavaScript.
-- Enforce tenant isolation and permissions in backend code.
-- Store published application configuration as immutable snapshots.
-- Defer a separate worker and runtime deployment until operational needs justify them.
-- Use an OIDC-compatible identity provider; provider selection remains open.
+## Decisions still requiring explicit approval
 
-These remain proposed until reviewed and accepted through the project's decision process.
-
-## 4. Decisions still open
-
-| Decision | Current direction | Required before |
+| Decision | Current proposal | Resolve before |
 |---|---|---|
-| Identity provider | OIDC provider; evaluate AWS Cognito and alternatives | Authentication implementation |
-| AWS hosting topology | Web, API, PostgreSQL and supporting services | Infrastructure implementation |
-| Secrets manager | Managed secrets service or equivalent | Connector credential implementation |
-| PostgreSQL RLS | Defence-in-depth option | Database security finalisation |
-| Role precedence/inheritance | Explicit policy model required | RBAC implementation |
-| Query filter grammar and limits | Typed allowlisted filter AST | Query engine implementation |
-| Snapshot format and compatibility | Versioned immutable configuration | Publishing implementation |
+| Identity provider and browser/API token flow | Managed OIDC provider; evaluate Cognito and alternatives | Authentication implementation |
+| Hosting topology | Containerised web/API, managed PostgreSQL on AWS or suitable platform | Infrastructure deployment |
+| Secrets manager | Managed secret store; credentials referenced, never embedded | Connector implementation |
+| PostgreSQL RLS | Evaluate as defence in depth | Database security finalisation |
+| Role precedence/inheritance | Explicit deny-by-default policy; final precedence documented | RBAC implementation |
+| Query grammar and limits | Typed allowlisted filter AST; bounded page/query complexity | Query engine implementation |
+| Snapshot compatibility | Versioned immutable config; safe readers/migrations | Publishing implementation |
 
-## 5. Phase 0 exit criteria
+## Phase 0 exit criteria
+- [ ] Review and approve technology stack and system architecture.
+- [ ] Choose identity provider and document browser-to-API authentication flow.
+- [ ] Review ERD, composite constraints and tenant ownership.
+- [ ] Finalise role assignment and permission precedence rules.
+- [ ] Review API conventions and first endpoint set.
+- [ ] Approve testing, coverage and CI/CD quality gates.
+- [ ] Accept ADRs for material decisions.
+- [ ] Validate internal links, terminology and document statuses.
+- [ ] Confirm no unresolved decision blocks Phase 1.
 
-- [ ] Product definition and MVP scope are approved.
-- [ ] Technology stack and system architecture are approved.
-- [ ] Core engine responsibilities and contracts are reviewed.
-- [ ] Logical data model and ERD are reviewed.
-- [ ] Tenant isolation and RBAC invariants are documented.
-- [ ] API conventions and initial endpoint boundaries are documented.
-- [ ] Testing strategy and CI/CD quality gates are documented.
-- [ ] ADRs exist for accepted material architectural decisions.
-- [ ] Roadmap and initial implementation backlog are actionable.
-- [ ] Cross-document links and terminology are consistent.
-- [ ] No unresolved decision blocks the first implementation milestone.
+## Change control
+For material changes, identify affected docs/code/tests, create a new ADR, supersede old ADRs rather than rewriting history, update authoritative docs in the same PR, update the change log and validate links.
 
-## 6. Change control
-
-When an architecture decision changes:
-1. Identify the affected documents, code and tests.
-2. Create a new ADR for a material decision change.
-3. Mark the previous ADR as superseded; preserve its history.
-4. Update authoritative documents in the same pull request.
-5. Update this tracker and the documentation change log.
-6. Verify internal links and examples.
-
-Do not rewrite history to make an old decision appear as though it never existed.
-
-## 7. Related documents
-
+## Related documents
 - [Product definition](../00-product/product-definition.md)
 - [MVP scope](../00-product/mvp-scope.md)
 - [Technology stack](../01-architecture/technology-stack.md)
 - [System architecture](../01-architecture/system-architecture.md)
 - [Engine contracts](../01-architecture/engine-contracts.md)
-- [Data model and storage](../02-database/data-model-and-storage.md)
-- [Security and tenant isolation](../01-architecture/security-and-tenant-isolation.md)
-
----
-
-## Change history
-
-| Version | Date | Change |
-|---|---|---|
-| 0.1 | 2026-11-10 | Initial Phase 0 architecture baseline tracker |
+- [Data model](../02-database/data-model-and-storage.md)
+- [ERD](../02-database/erd.md)
+- [Security](../01-architecture/security-and-tenant-isolation.md)
+- [API conventions](../05-api/api-conventions.md)
+- [Testing](../06-operations/testing-strategy.md)
+- [CI/CD](../06-operations/deployment-and-ci-cd.md)
