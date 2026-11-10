@@ -1,7 +1,7 @@
 ---
 title: PanelForge technology stack
 status: Proposed
-version: 0.2
+version: 0.3
 last_updated: 2026-11-10
 owner: Project maintainers
 source_of_truth: true
@@ -252,6 +252,22 @@ Customer data-source adapters for REST, GraphQL and MySQL are planned product ca
 - [Documentation conventions](../documentation-conventions.md)
 - [ADR index](../adr/README.md)
 
+## 15. Initial application scaffold
+
+The first application scaffold uses the following concrete setup:
+
+- **Web application:** Next.js 16.4.2 with React 19.2.0 and TypeScript.
+- **API application:** NestJS 11.x with TypeScript and the Express platform adapter.
+- **Web routes:** the initial product shell is served from the Next.js root route.
+- **API prefix:** platform endpoints begin under `/api/v1`.
+- **Health endpoint:** `GET /api/v1/health` returns a small JSON status payload for local checks and future uptime monitoring.
+- **Local ports:** Next.js uses port 3000 by default; the API uses port 4000 by default and can be overridden with `PORT`.
+- **Workspace commands:** root scripts delegate development, builds and type checking to Turborepo.
+
+These are implementation choices for the initial scaffold. They do not approve the still-proposed identity provider, database hosting or production deployment decisions. The initial page is a visual shell, not the completed builder.
+
+Linting, automated tests, coverage gates and CI are deliberately introduced in the planned engineering-quality batch after the first application shell is running. They are not represented as working root commands until their tools and per-application scripts are configured.
+
 ---
 
 ## Change history
@@ -259,4 +275,4 @@ Customer data-source adapters for REST, GraphQL and MySQL are planned product ca
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-11-10 | Initial proposed technology stack for the PanelForge MVP |
-| 0.2 | 2026-11-10 | Pin Node.js 24 and pnpm 11 for the initial workspace |
+| 0.2 | 2026-11-10 | Pin Node.js 24 and pnpm 11 for the initial workspace |\n| 0.3 | 2026-11-10 | Record the initial Next.js and NestJS application scaffold and workspace commands |

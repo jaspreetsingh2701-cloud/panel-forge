@@ -1,5 +1,17 @@
 # PanelForge API
 
-The NestJS application will expose the versioned REST API and own authentication validation, tenant context, metadata, data access and backend authorisation.
+NestJS modular-monolith API for PanelForge.
 
-This directory becomes a workspace package in the next implementation batch.
+## Local development
+
+From the repository root:
+
+```bash
+pnpm --filter @panelforge/api dev
+```
+
+The initial health endpoint is available at:
+
+`http://localhost:4000/api/v1/health`
+
+This is a foundation endpoint only. Authentication, tenant context, database access and domain modules will be introduced in later batches.
