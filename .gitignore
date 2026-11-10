@@ -1,0 +1,30 @@
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Dependencies and build output (for future application code)
+node_modules/
+dist/
+build/
+.next/
+coverage/
+.turbo/
+
+# Local tooling
+.cache/
+.tmp/
