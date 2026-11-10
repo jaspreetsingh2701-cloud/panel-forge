@@ -1,7 +1,7 @@
 ---
 title: PanelForge technology stack
 status: Proposed
-version: 0.1
+version: 0.2
 last_updated: 2026-11-10
 owner: Project maintainers
 source_of_truth: true
@@ -18,7 +18,14 @@ The stack is intentionally designed for a small team and a modular-monolith arch
 
 This document is **Proposed**. Choices marked as pending must be resolved before the relevant implementation begins.
 
-## 2. Architecture principles
+## 2. Node.js runtime and package manager
+
+- Use Node.js 24.x for the initial workspace. It is a supported LTS line with a mature ecosystem; keep the supported range within major 24 for reproducible development.
+- Pin pnpm 11.28.11 through the root package.json packageManager field. This avoids developers silently using different package-manager majors.
+- The repository includes .nvmrc with 24. On Windows, use a Node version manager such as nvm-windows or install a compatible Node 24 LTS release directly.
+- Upgrade Node or pnpm only through a reviewed dependency/toolchain change, with lockfile and CI validation.
+
+## 3. Architecture principles
 
 - Prefer a modular monolith over microservices for the MVP.
 - Keep the builder, runtime renderer, API and domain logic separated by clear module and package boundaries.
@@ -28,7 +35,7 @@ This document is **Proposed**. Choices marked as pending must be resolved before
 - Keep infrastructure and vendor-specific integrations behind replaceable interfaces where practical.
 - Add infrastructure only when a concrete product requirement needs it.
 
-## 3. Proposed stack at a glance
+## 4. Proposed stack at a glance
 
 | Area | Proposed technology | Responsibility |
 |---|---|---|
@@ -52,7 +59,7 @@ This document is **Proposed**. Choices marked as pending must be resolved before
 | Containerisation | Docker | Consistent local and deployment environments |
 | Background jobs | Redis + BullMQ, when required | Deferred asynchronous processing |
 
-## 4. Frontend
+## 5. Frontend
 
 ### 4.1 Next.js, React and TypeScript
 
@@ -86,7 +93,7 @@ Use the tools for distinct responsibilities:
 
 Do not duplicate server data in Zustand without a specific reason.
 
-## 5. Backend
+## 6. Backend
 
 ### 5.1 NestJS
 
@@ -113,7 +120,7 @@ Use DTOs and validation at API boundaries. Document endpoints, authentication re
 
 GraphQL is not part of the initial PanelForge API. Support for customer GraphQL data sources is a separate connector capability and can be considered later.
 
-## 6. Data and persistence
+## 7. Data and persistence
 
 ### 6.1 PostgreSQL
 
@@ -141,7 +148,7 @@ Tenant context must be derived from the authenticated user's validated membershi
 
 Every tenant-owned read and write must be scoped and authorised by the backend. Add automated tests for cross-tenant access. Consider PostgreSQL row-level security as defence in depth after the application-level model is established.
 
-## 7. Authentication and authorisation
+## 8. Authentication and authorisation
 
 ### 7.1 Authentication — provider decision pending
 
@@ -163,7 +170,7 @@ Implement PanelForge's product-specific RBAC and policy checks in the backend. A
 
 The backend must enforce application, resource, action, field and record-level restrictions. Hiding a button or field in the frontend is not sufficient authorisation.
 
-## 8. Testing and quality
+## 9. Testing and quality
 
 - **Jest:** unit and integration tests for API modules and shared packages.
 - **React Testing Library:** component tests focused on user-observable behaviour.
@@ -174,7 +181,7 @@ The backend must enforce application, resource, action, field and record-level r
 
 Coverage percentages are quality signals, not proof that security or behaviour is correct. Critical flows also require meaningful assertions and negative tests.
 
-## 9. Build, delivery and operations
+## 10. Build, delivery and operations
 
 - Use Docker for consistent local development and deployment packaging.
 - Use GitHub Actions for pull-request checks and deployment workflows.
@@ -186,7 +193,7 @@ Coverage percentages are quality signals, not proof that security or behaviour i
 
 Package versioning, API versioning and published application snapshot versioning are separate concerns. The detailed policy will be maintained in a dedicated versioning document.
 
-## 10. Initial repository application boundaries
+## 11. Initial repository application boundaries
 
 The initial monorepo should favour a small number of deployable applications:
 
@@ -213,7 +220,7 @@ Additional packages and applications should be introduced when implementation ne
 
 This is a logical starting boundary, not a requirement to create every package immediately. Create packages when there is real code to own.
 
-## 11. Deferred technologies and capabilities
+## 12. Deferred technologies and capabilities
 
 The following are intentionally not required for the first MVP:
 
@@ -228,7 +235,7 @@ The following are intentionally not required for the first MVP:
 
 Customer data-source adapters for REST, GraphQL and MySQL are planned product capabilities, but they do not change PostgreSQL as the initial managed platform database.
 
-## 12. Decisions still to confirm
+## 13. Decisions still to confirm
 
 | Decision | Current position | When to resolve |
 |---|---|---|
@@ -238,7 +245,7 @@ Customer data-source adapters for REST, GraphQL and MySQL are planned product ca
 | Redis/BullMQ | Deferred | Before first asynchronous job |
 | Runtime extraction | Keep inside the Next.js app initially | Revisit against scale and deployment needs |
 
-## 13. Related documents
+## 14. Related documents
 
 - [Product definition](../00-product/product-definition.md)
 - [MVP scope](../00-product/mvp-scope.md)
@@ -252,3 +259,4 @@ Customer data-source adapters for REST, GraphQL and MySQL are planned product ca
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-11-10 | Initial proposed technology stack for the PanelForge MVP |
+| 0.2 | 2026-11-10 | Pin Node.js 24 and pnpm 11 for the initial workspace |

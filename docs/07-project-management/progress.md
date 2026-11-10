@@ -1,7 +1,7 @@
 ---
 title: PanelForge project progress
 status: Active
-version: 0.2
+version: 0.3
 last_updated: 2026-11-10
 source_of_truth: true
 ---
@@ -9,7 +9,10 @@ source_of_truth: true
 # PanelForge project progress
 
 ## Current milestone
-Phase 0 — Architecture and Documentation Baseline.
+Phase 1 — Monorepo and infrastructure.
+
+## Phase 0 status
+Documentation baseline merged into main. Product definition and MVP scope are approved. Architecture and implementation-specific decisions remain documented as Proposed and will be confirmed at the relevant implementation gates.
 
 ## Workstream status
 | Workstream | Status | Notes |
@@ -17,33 +20,38 @@ Phase 0 — Architecture and Documentation Baseline.
 | Repository conventions | Complete | Foundation exists |
 | Product definition | Approved | Product direction/personas |
 | MVP scope | Approved | P0/P1/deferred scope |
-| Technology stack | Proposed | Identity provider and hosting details open |
-| System architecture | Proposed | Modular monolith; one web app and one API |
-| Engine contracts | Proposed | Metadata, registry, renderer, query, policy and publishing |
-| Data model and ERD | Proposed | Logical model; physical schema pending |
-| Security and tenancy | Proposed | Invariants and negative tests documented |
-| API conventions | Proposed | Initial REST conventions |
-| Testing strategy | Proposed | Test layers and initial coverage gates |
-| CI/CD and deployment | Proposed | Environments and PR gates |
-| Versioning strategy | Proposed | Package/API/platform/snapshot versioning |
-| ADRs | Proposed | Six initial decision records |
-| Roadmap/backlog | Proposed | Implementation sequence and acceptance criteria |
+| Phase 0 documentation | Complete | Merged into main |
+| Phase 1 workspace scaffold | In progress | Root pnpm/Turbo configuration on feature branch |
+| Next.js web application | Pending | Next implementation batch |
+| NestJS API application | Pending | Next implementation batch |
+| PostgreSQL and Prisma | Pending | Following application skeletons |
+| Docker local environment | Pending | After database configuration |
+| Initial CI workflow | Pending | After workspace tasks exist |
 
-## Phase 0 exit criteria
-- [ ] Approve technology stack and architecture.
-- [ ] Resolve identity provider and token/session design.
-- [ ] Review ERD, constraints and tenant ownership.
-- [ ] Review role assignment and permission precedence.
-- [ ] Review API conventions and initial endpoint boundaries.
-- [ ] Approve testing and CI/CD quality gates.
-- [ ] Accept ADRs for material decisions.
-- [ ] Verify document links and terminology.
-- [ ] Confirm no blocker remains for Phase 1.
+## Phase 1 completion criteria
+- [ ] Reproducible pnpm workspace install.
+- [ ] Next.js web application starts locally.
+- [ ] NestJS API starts locally and exposes a health endpoint.
+- [ ] PostgreSQL starts locally through Docker Compose.
+- [ ] Prisma connects and applies the initial migration.
+- [ ] Environment variables are validated and secrets are excluded from Git.
+- [ ] Root build, lint, typecheck and test commands are wired.
+- [ ] Initial GitHub Actions checks pass.
 
-A drafted document is not the same as an approved architectural decision. Progress reflects reviewed/approved deliverables, not file count.
+## Current implementation batch
+**Batch 1 — Workspace foundation**
+- pnpm workspace declaration.
+- Turborepo task orchestration.
+- Root package scripts and shared TypeScript defaults.
+- Prettier defaults and repository ignore rules.
+- apps/web, apps/api and packages directory boundaries.
+- Node.js and pnpm versions pinned.
+
+## Progress
+Phase 1 is tracked by completed acceptance criteria, not by the number of files created. The first batch is drafted on feat/phase-1-monorepo-foundation; it is not merged until reviewed and verified.
 
 ## Next milestone
-Phase 1: monorepo skeleton, local environment, running web and API applications.
+Batch 2: scaffold and run the Next.js web app and NestJS API.
 
 ## Related documents
 - [Phase 0 baseline](phase-0-architecture-baseline.md)
