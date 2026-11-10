@@ -1,36 +1,33 @@
 # PanelForge
 
-PanelForge is a multi-tenant SaaS platform for visually building and publishing dynamic, plug-and-play admin applications.
+PanelForge is a multi-tenant SaaS platform for visually building, configuring and publishing dynamic admin applications.
 
-Teams will be able to connect data sources, define resources and custom fields, design forms, tables and dashboards, configure role-based access, and publish versioned admin experiences.
+Teams connect data sources, define resources and custom fields, design forms, tables and dashboards, configure access policies, and publish versioned admin experiences.
 
-> **Project status:** Phase 0 — Architecture and documentation baseline  
-> **Current milestone:** Batch 1 — Repository and documentation foundation
+> **Project status:** Phase 0 documentation baseline drafted; review and approval remain before implementation.
+> **Current focus:** Architecture, data model, API, security and engineering delivery standards.
 
 ## Product direction
 
 PanelForge is a platform for building admin applications, not a prebuilt admin dashboard.
 
-The initial MVP is intended to demonstrate this end-to-end journey:
+The initial MVP demonstration:
+1. A tenant creates an organisation and application.
+2. It uses the managed PanelForge PostgreSQL data source.
+3. It defines resources and custom fields.
+4. It visually builds forms, tables and a dashboard.
+5. It configures Admin, Manager and Viewer access.
+6. It publishes an application snapshot.
+7. Another team member signs in and sees only permitted data and actions.
 
-1. A tenant creates an organisation and an application.
-2. The tenant connects a supported data source.
-3. The tenant defines resources and custom fields.
-4. The tenant visually builds forms, tables and a dashboard.
-5. The tenant configures roles and permissions.
-6. The tenant publishes the application.
-7. Another team member signs in and sees only the data and actions they are authorised to access.
-
-## Project principles
-
-- **Documentation-driven development:** important decisions are documented and reviewed alongside implementation.
-- **Security by design:** tenant isolation and server-side authorisation are foundational requirements.
-- **Modular monolith first:** keep deployment and operations manageable while preserving clear module boundaries.
-- **Configuration over arbitrary code:** user-created panels are defined through validated, versioned metadata and configuration.
-- **Quality is part of the feature:** tests, documentation and CI checks are included in feature completion.
+## Principles
+- Documentation-driven development.
+- Security and tenant isolation by design.
+- Modular monolith first.
+- Declarative, validated configuration instead of arbitrary customer code.
+- Tests, documentation and CI are part of feature completion.
 
 ## Repository layout
-
 ```text
 panelforge/
 ├── docs/
@@ -47,22 +44,15 @@ panelforge/
 └── README.md
 ```
 
-The `docs/README.md` file is the documentation index and explains the intended contents of each section.
+## Start here
+- [Documentation index](docs/README.md)
+- [Product definition](docs/00-product/product-definition.md)
+- [MVP scope](docs/00-product/mvp-scope.md)
+- [Phase 0 tracker](docs/07-project-management/phase-0-architecture-baseline.md)
+- [Roadmap](docs/07-project-management/roadmap.md)
 
-## Getting started
-
-This repository currently contains the project documentation foundation. Application setup instructions will be added when the technology stack and monorepo structure are approved.
-
-Start with:
-
-1. [`docs/README.md`](docs/README.md) — documentation map.
-2. [`docs/documentation-conventions.md`](docs/documentation-conventions.md) — how project documentation is maintained.
-3. [`docs/adr/README.md`](docs/adr/README.md) — architecture decision record process.
-
-## Project status
-
-See the project roadmap and progress tracker once they are created in Phase 0.
+## Development status
+The repository currently contains the documentation baseline. Implementation begins after Phase 0 decisions are reviewed and approved. See [project progress](docs/07-project-management/progress.md).
 
 ## License
-
 No open-source license has been selected. Until one is added, all rights are reserved by the project owner.
