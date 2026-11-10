@@ -1,7 +1,7 @@
 ---
 title: PanelForge logical entity relationship diagram
 status: Proposed
-version: 0.1
+version: 0.2
 last_updated: 2026-11-10
 source_of_truth: true
 ---
@@ -9,6 +9,46 @@ source_of_truth: true
 # PanelForge logical ERD
 
 This is the logical MVP model. Exact Prisma models, composite foreign keys, delete rules and migrations are finalised during implementation review.
+
+## Initial implementation slice
+
+The first database migration is intentionally limited to platform identity and tenancy. The Prisma schema defines these relationships:
+
+```mermaid
+erDiagram
+  USERS ||--o{ TENANT_MEMBERS : joins
+  TENANTS ||--o{ TENANT_MEMBERS : has
+
+  USERS {
+    uuid id PK
+    string email UK
+    string display_name
+    datetime created_at
+    datetime updated_at
+  }
+
+  TENANTS {
+    uuid id PK
+    string name
+    string slug UK
+    string status
+    datetime created_at
+    datetime updated_at
+  }
+
+  TENANT_MEMBERS {
+    uuid id PK
+    uuid tenant_id FK
+    uuid user_id FK
+    string status
+    datetime created_at
+    datetime updated_at
+  }
+```
+
+The Prisma schema and generated migration are the implementation source for this initial slice. The broader logical model below is a forward-looking MVP model; it is not a claim that all entities have already been implemented or migrated.
+
+## Logical MVP model
 
 ```mermaid
 erDiagram
@@ -154,6 +194,7 @@ erDiagram
 ```
 
 ## Integrity and uniqueness rules
+
 - Membership unique on (tenant_id, user_id).
 - Application slug unique within tenant.
 - Resource key unique within application.
@@ -169,13 +210,17 @@ erDiagram
 - Avoid cascading deletion of audit history or published snapshots.
 
 ## Deliberately deferred
+
 Workflow executions, API credentials, role inheritance, external schema caches and per-tenant physical tables are not required for the first migration.
 
 ## Related documents
+
 - [Data model and storage](data-model-and-storage.md)
 - [Security and tenant isolation](../01-architecture/security-and-tenant-isolation.md)
 
 ## Change history
+
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-11-10 | Initial logical ERD |
+| 0.2 | 2026-11-10 | Add the initial identity and tenancy implementation slice |
