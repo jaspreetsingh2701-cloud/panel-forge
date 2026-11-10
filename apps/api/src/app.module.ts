@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
+import { DatabaseModule } from './database/prisma.module';
 import { HealthController } from './health/health.controller';
 
 @Module({
-  imports: [],
+  imports: [DatabaseModule],
   controllers: [HealthController],
   providers: [],
 })
