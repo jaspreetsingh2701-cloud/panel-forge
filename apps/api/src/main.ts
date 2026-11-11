@@ -1,29 +1,32 @@
-import 'dotenv/config';
+
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { env } from './config/env';
 
 async function bootstrap() {
-  const databaseUrl = process.env.DATABASE_URL;
-
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL is required. Copy apps/api/.env.example to apps/api/.env.');
-  }
-
-  const port = Number(process.env.PORT ?? 4000);
-
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error('PORT must be an integer between 1 and 65535.');
-  }
-
   const app = await NestFactory.create(AppModule);
 
-  // Keep all platform API routes versioned from the very beginning.
+  // Validate incoming requests globally using DTO decorators.
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+
+  // Keep all platform API routes versioned.
   app.setGlobalPrefix('api/v1');
+
+  // Allow NestJS to handle graceful shutdown signals.
   app.enableShutdownHooks();
 
-  // The port can be overridden by the environment in local and hosted setups.
-  await app.listen(port, '0.0.0.0');
+  // Use the validated configuration.
+  await app.listen(env.PORT, '0.0.0.0');
+
+  console.log(`PanelForge API running on port ${env.PORT}`);
 }
 
 void bootstrap();
