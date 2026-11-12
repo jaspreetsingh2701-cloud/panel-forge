@@ -1,8 +1,8 @@
 ---
 title: PanelForge project progress
 status: Active
-version: 0.9
-last_updated: 2026-11-12
+version: 1.0
+last_updated: 2026-11-13
 source_of_truth: true
 ---
 
@@ -10,93 +10,47 @@ source_of_truth: true
 
 ## Current milestone
 
-Phase 2.1 — Database and authentication design.
+Phase 2.5 — Engineering quality foundation.
 
-## Phase 0 status
+## Completed phases
 
-Documentation baseline merged into main. Product definition and MVP scope are approved. Architecture and implementation-specific decisions remain documented as Proposed and will be confirmed at the relevant implementation gates.
-
-## Workstream status
-
-| Workstream | Status | Notes |
+| Phase | Status | Evidence |
 |---|---|---|
-| Repository conventions | Complete | Workspace and formatting baseline exists |
-| Product definition | Approved | Product direction/personas |
-| MVP scope | Approved | P0/P1/deferred scope |
-| Phase 0 documentation | Complete | Merged into main |
-| Phase 1 workspace scaffold | Complete | pnpm/Turbo root workspace merged in PR #4 |
-| Next.js web application | Complete | Local development and production build verified |
-| NestJS API application | Complete | Local development, production build and health route verified |
-| PostgreSQL and Prisma | Complete | Prisma 7 foundation and initial User, Tenant and TenantMember schema merged; Phase 2.1 will extend the identity schema |
-| Environment configuration | Complete | Central Zod validation and API configuration foundation merged |
-| Initial CI workflow | Pending | To be added after workspace tasks and test harness are established |
+| Phase 0 — Architecture and documentation baseline | Complete | Documentation baseline merged |
+| Phase 1 — Monorepo and infrastructure | Complete | Workspace, Next.js, NestJS, PostgreSQL/Prisma and API foundations merged |
+| Phase 2 — Identity, tenancy and first vertical slice | Complete for the current authentication/workspace slice | Custom authentication, tenant membership, refresh sessions, same-origin proxy and starter workspace UI merged; PRs #10–#14 |
 
-## Phase 1 completion criteria (completed)
+Phase 2's broader application/resource tenancy operations remain part of the upcoming metadata and application-management implementation; completion here refers to the identity, tenant membership and authenticated workspace foundation.
 
-- [x] Reproducible pnpm workspace install and committed lockfile.
-- [x] Next.js web application starts locally.
-- [x] NestJS API starts locally and exposes a health endpoint.
-- [x] PostgreSQL starts locally through Docker Compose.
-- [x] Prisma connects and applies the initial migration.
-- [x] Environment variables are validated and secrets are excluded from Git.
-- [x] Root build and typecheck commands are wired and pass for the current application scaffold.
-- [ ] Linting, tests, coverage and related quality gates are added in Phase 2.5.
-- [x] Initial GitHub Actions checks pass.
+## Phase 2.5 status
 
-## Implementation batches
+| Batch | Status | Notes |
+|---|---|---|
+| 2.5.1 CI baseline | In review | PR adds frozen-lockfile GitHub Actions checks for API/web typecheck and builds |
+| 2.5.2 Lint, formatting and commit hooks | Pending | ESLint, Prettier enforcement, Husky, lint-staged and Commitlint |
+| 2.5.3 Unit/component/integration tests | Pending | Jest, React Testing Library, PostgreSQL integration setup and coverage |
+| 2.5.4 E2E, API contract and security scans | Pending | Playwright, Swagger/OpenAPI and security scanning |
+| 2.5.5 Staging and release workflow | Pending | Protected staging, smoke tests and rollback checklist |
 
-**Batch 1 — Workspace foundation (merged)**
-- pnpm workspace declaration and pinned package manager.
-- Turborepo task orchestration and root scripts.
-- Shared TypeScript defaults, Prettier defaults and repository ignore rules.
-- apps/web, apps/api and packages directory boundaries.
-- Node.js 24 toolchain declaration.
-
-**Batch 2 — Application skeletons (merged and locally validated)**
-- Next.js web application with a responsive PanelForge product-shell page.
-- NestJS API application with versioned health endpoint.
-- Application-specific TypeScript and package configuration.
-- Root development, build and typecheck task wiring.
-- Local development, production builds and TypeScript checks verified.
-- API build configuration uses non-incremental TypeScript compilation to avoid the observed Nest watch output issue.
-
-**Batch 3 — Database and local infrastructure (merged and locally validated)**
-- PostgreSQL 17 service through root Docker Compose.
-- Prisma ORM 7.10.1, PostgreSQL driver adapter and environment configuration.
-- Initial User, Tenant and TenantMember schema.
-- NestJS Prisma service/module and database-aware health endpoint.
-- Local PostgreSQL startup, Prisma migration application and database-aware runtime verification completed.
-
-## Progress
-
-**Phase 1: 100% complete.** Workspace, web/API skeletons, PostgreSQL/Prisma foundation, environment validation and API error conventions are merged.
-
-**Phase 2: approximately 15% implementation (provisional).** Phase 2.1 architecture documentation is merged. The identity/session Prisma schema and migration have passed local validation and have been applied to local PostgreSQL; PR #10 is awaiting review/merge. No authentication endpoints or services have been implemented yet.
-
-## Phase 2.1 design and implementation status
-
-- [x] Custom NestJS email/password authentication selected for the MVP.
-- [x] First registration creates User + Tenant + OWNER membership.
-- [x] Google sign-in deferred until after the baseline flow works.
-- [x] Next.js same-origin proxy selected for browser-to-NestJS traffic.
-- [x] Document rationale, alternatives and trade-offs in ADR-007 and ADR-008.
-- [x] Review and merge the Phase 2.1 architecture documentation PR (#9).
-- [x] Extend Prisma schema with password, email-verification, tenant-role, session and refresh-token models.
-- [x] Add a reviewed-by-code migration SQL file for the identity/session schema.
-- [x] Run Prisma format, validate and generate Prisma Client locally.
-- [x] Apply the migration to local PostgreSQL and verify migration status.
-- [x] Run the API TypeScript typecheck successfully.
+See the [Phase 2.5 engineering quality plan](../06-operations/phase-2-5-engineering-quality-plan.md) for batch scope and exit criteria.
 
 ## Next milestone
 
-Review and merge PR #10 after confirming its final diff and checks. Then begin Phase 2.2: implement the NestJS authentication module and registration flow.
+Complete Phase 2.5 in order. Begin Phase 3 — metadata and dynamic records — only after its engineering quality exit criteria are met.
 
-## Learning backlog
+## Product roadmap
 
-The post-MVP learning track is maintained separately so it does not block the working product: [Post-MVP engineering learning checklist](post-mvp-engineering-learning-checklist.md).
+- Phase 3 — Resources, typed fields, schema versions, JSONB records, dynamic CRUD and typed query grammar.
+- Phase 4 — Visual builder.
+- Phase 5 — Data-source adapters.
+- Phase 6 — Dynamic RBAC.
+- Phase 7 — Page builder and dashboards.
+- Phase 8 — Actions, publishing and audit.
+- Phase 9 — Production hardening.
 
-## Related documents
+## Working agreements
 
-- [Phase 0 baseline](phase-0-architecture-baseline.md)
-- [Roadmap](roadmap.md)
-- [Backlog](backlog.md)
+- Keep changes in short-lived feature branches and reviewable pull requests.
+- Do not merge a PR until local validation and required CI checks pass.
+- Never commit secrets or production customer data.
+- Every tenant/data/permission change must consider negative security tests.

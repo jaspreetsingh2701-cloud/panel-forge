@@ -1,8 +1,8 @@
 ---
 title: PanelForge delivery roadmap
 status: Proposed
-version: 0.2
-last_updated: 2026-11-12
+version: 0.3
+last_updated: 2026-11-13
 source_of_truth: true
 ---
 
@@ -38,7 +38,13 @@ Exit when blocking choices for Phase 1 are resolved and docs are internally cons
 - Google/OIDC and managed identity providers are post-MVP learning options, not Phase 2 dependencies.
 
 ## Phase 2.5 — Engineering quality foundation
-ESLint, Prettier, Husky, lint-staged, Commitlint, Conventional Commits, Changesets, Jest, RTL, Playwright, coverage, Swagger/OpenAPI, CI, staging baseline and security scanning.
+Delivered in small, verifiable batches. See the [Phase 2.5 engineering quality plan](../06-operations/phase-2-5-engineering-quality-plan.md).
+- 2.5.1 CI baseline: frozen-lockfile install, API/web typechecks and production builds.
+- 2.5.2 ESLint, Prettier, Husky, lint-staged and Commitlint.
+- 2.5.3 Jest, React Testing Library, PostgreSQL integration tests and coverage thresholds.
+- 2.5.4 Playwright, Swagger/OpenAPI and security scanning.
+- 2.5.5 Protected staging workflow, smoke tests and rollback checklist.
+Exit only when every batch passes its documented criteria.
 
 ## Phase 3 — Metadata and dynamic records
 Resources, fields, stable IDs, schema versions, JSONB records, dynamic CRUD, typed query grammar and permission foundations.
