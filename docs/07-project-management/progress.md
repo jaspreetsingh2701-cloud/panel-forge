@@ -10,7 +10,7 @@ source_of_truth: true
 
 ## Current milestone
 
-Phase 3–4 — Workspace foundation and custom data engine (consolidated delivery PR in review).
+Phase 3–4 — Workspace foundation and custom data engine (consolidated PR prepared for review).
 
 ## Completed phases
 
