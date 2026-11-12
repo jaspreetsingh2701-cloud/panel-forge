@@ -29,14 +29,14 @@ describe('ApplicationsService', () => {
   });
 
   it('creates an application under the authorised tenant and normalises text', async () => {
-    prisma.tenantMember.findFirst.mockResolvedValue({ id: 'membership-1' });
+    prisma.tenantMember.findFirst.mockResolvedValue({ role: 'OWNER' });
     prisma.application.create.mockResolvedValue({ id: 'app-1' });
     await service.create('user-1', 'tenant-1', { name: ' Inventory ', description: ' Manage stock ', template: 'operations' });
     expect(prisma.application.create).toHaveBeenCalledWith(expect.objectContaining({ data: { tenantId: 'tenant-1', name: 'Inventory', description: 'Manage stock', template: 'operations' } }));
   });
 
   it('cannot archive an application outside the requested tenant', async () => {
-    prisma.tenantMember.findFirst.mockResolvedValue({ id: 'membership-1' });
+    prisma.tenantMember.findFirst.mockResolvedValue({ role: 'OWNER' });
     prisma.application.updateMany.mockResolvedValue({ count: 0 });
     await expect(service.archive('user-1', 'tenant-1', 'foreign-app')).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.application.updateMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'foreign-app', tenantId: 'tenant-1', status: 'DRAFT' } }));
