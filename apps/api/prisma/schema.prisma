@@ -29,6 +29,23 @@ enum ApplicationStatus {
   DRAFT
   ARCHIVED
 }
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+enum ResourceStatus {
+  ACTIVE
+  ARCHIVED
+}
+enum ResourceFieldType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  DATE
+  SELECT
+  RELATION
+}
 
 model User {
   id              String         @id @default(uuid()) @db.Uuid
@@ -51,6 +68,7 @@ model Tenant {
   status       TenantStatus   @default(ACTIVE)
   members      TenantMember[]
   applications Application[]
+  invitations WorkspaceInvitation[]
   createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -65,6 +83,7 @@ model Application {
   template    String            @default("blank") @db.VarChar(32)
   status      ApplicationStatus @default(DRAFT)
   tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  resources   Resource[]
   createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -122,4 +141,66 @@ model RefreshToken {
   @@index([sessionId, expiresAt])
   @@index([consumedAt])
   @@map("refresh_tokens")
+}
+
+model WorkspaceInvitation {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+  email String @db.VarChar(320)
+  role TenantRole @default(MEMBER)
+  status InvitationStatus @default(PENDING)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  @@index([tenantId, status, createdAt])
+  @@index([tenantId, email, status])
+  @@map("workspace_invitations")
+}
+model Resource {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+  applicationId String @map("application_id") @db.Uuid
+  name String @db.VarChar(80)
+  key String @db.VarChar(64)
+  description String? @db.VarChar(240)
+  status ResourceStatus @default(ACTIVE)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fields ResourceField[]
+  records DynamicRecord[]
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  @@unique([applicationId, key])
+  @@index([tenantId, applicationId, status])
+  @@map("resources")
+}
+model ResourceField {
+  id String @id @default(uuid()) @db.Uuid
+  resourceId String @map("resource_id") @db.Uuid
+  name String @db.VarChar(80)
+  key String @db.VarChar(64)
+  type ResourceFieldType
+  required Boolean @default(false)
+  options String[] @default([])
+  relationResourceId String? @map("relation_resource_id") @db.Uuid
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  relationTarget Resource? @relation("ResourceRelations", fields: [relationResourceId], references: [id], onDelete: SetNull)
+  relationSources Resource[] @relation("ResourceRelations")
+  position Int @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  @@unique([resourceId, key])
+  @@index([relationResourceId])
+  @@map("resource_fields")
+}
+model DynamicRecord {
+  id String @id @default(uuid()) @db.Uuid
+  resourceId String @map("resource_id") @db.Uuid
+  data Json @db.JsonB
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  @@index([resourceId, updatedAt])
+  @@map("dynamic_records")
 }
