@@ -8,7 +8,7 @@ export default function HomePage() {
           <span className="brand-mark">P</span><span>PanelForge</span>
         </a>
         <div className="component-row">
-          <span className="environment-label">Platform preview</span>
+          <div className="component-row"><Link className="environment-label" href="/login">Sign in</Link><Link className="environment-label" href="/register">Get started</Link></div>
           <ThemeToggle />
         </div>
       </nav>
