@@ -15,22 +15,33 @@ concurrency:
 
 jobs:
   validate:
-    name: Quality, typecheck and production build
+    name: Quality, tests, typecheck and production build
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: panelforge
+          POSTGRES_PASSWORD: panelforge-ci
+          POSTGRES_DB: panelforge_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U panelforge -d panelforge_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
-      DATABASE_URL: postgresql://panelforge:panelforge-ci@localhost:5432/panelforge
+      DATABASE_URL: postgresql://panelforge:panelforge-ci@localhost:5432/panelforge_test
       JWT_ACCESS_SECRET: panelforge-ci-only-secret-do-not-use-outside-ci
       NODE_ENV: test
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 11.28.11
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -40,6 +51,14 @@ jobs:
         run: pnpm format:check
       - name: Lint
         run: pnpm lint
+      - name: Apply Prisma migrations
+        run: pnpm --filter @panelforge/api exec prisma migrate deploy
+      - name: API unit tests and coverage
+        run: pnpm --filter @panelforge/api test:coverage
+      - name: PostgreSQL integration tests
+        run: pnpm --filter @panelforge/api test:integration
+      - name: Web component tests and coverage
+        run: pnpm --filter @panelforge/web test:coverage
       - name: Typecheck API
         run: pnpm --filter @panelforge/api typecheck
       - name: Typecheck web
@@ -48,3 +67,7 @@ jobs:
         run: pnpm --filter @panelforge/api build
       - name: Build web
         run: pnpm --filter @panelforge/web build
+      - name: Install Playwright Chromium
+        run: pnpm --filter @panelforge/web exec playwright install --with-deps chromium
+      - name: Playwright smoke tests
+        run: pnpm --filter @panelforge/web test:e2e
