@@ -27,5 +27,7 @@ Use sequential, never-reused numbers:
 | [ADR-004](ADR-004-component-registry.md) | Curated component registry | Proposed |
 | [ADR-005](ADR-005-immutable-publishing.md) | Immutable published snapshots | Proposed |
 | [ADR-006](ADR-006-backend-authorisation.md) | Backend permission enforcement | Proposed |
+| [ADR-007](ADR-007-custom-authentication-and-session-management.md) | Custom authentication and session management | Proposed |
+| [ADR-008](ADR-008-nextjs-same-origin-api-proxy.md) | Next.js same-origin API proxy | Proposed |
 
 These ADRs document the current recommendations. They are not accepted decisions until reviewed and approved.

@@ -1,11 +1,11 @@
 ---
 title: PanelForge data model and storage
 status: Proposed
-version: 0.2
-last_updated: 2026-11-10
+version: 0.3
+last_updated: 2026-11-12
 owner: Project maintainers
 source_of_truth: true
-related_adrs: [ADR-002]
+related_adrs: [ADR-002, ADR-007]
 ---
 
 # PanelForge data model and storage
@@ -34,10 +34,12 @@ The design uses PostgreSQL for platform data and managed application records. Re
 
 | Entity | Purpose |
 |---|---|
-| users | Platform user identity |
+| users | Platform user identity and password hash |
 | tenants | Organisation/workspace |
-| tenant_members | User membership and status within a tenant |
-| invitations | Invitation lifecycle, inviter and invitee details |
+| tenant_members | User membership, status and tenant-scoped role |
+| auth_sessions | Browser/device login session with expiry and revocation state |
+| refresh_tokens | Hashed refresh-token records supporting rotation and replay detection |
+| invitations | Future invitation lifecycle, inviter and invitee details |
 
 ### Application and metadata
 
@@ -198,7 +200,41 @@ The initial schema uses UUID primary keys, timestamp columns and relational fore
 
 The Prisma schema is the implementation source for these models. The initial migration is generated and reviewed as part of the database-foundation implementation; the broader logical model in this document remains a forward-looking design, not a claim that every listed entity already exists in the database.
 
-## 12. Deferred storage approaches
+### Authentication model
+
+The existing Prisma schema already establishes User, Tenant and TenantMember. Phase 2.1 extends these models rather than replacing them.
+
+| Prisma model | Key fields | Notes |
+|---|---|---|
+| User | email, passwordHash, displayName, emailVerifiedAt | Normalized unique email; Argon2id password hash |
+| Tenant | name, slug, status | First tenant is created during registration |
+| TenantMember | tenantId, userId, role, status | Unique tenant/user pair; initial role is OWNER |
+| AuthSession | userId, createdAt, expiresAt, revokedAt, lastUsedAt | One row per device/browser session |
+| RefreshToken | sessionId, tokenHash, expiresAt, consumedAt, revokedAt | Store hash only; retain consumed-token evidence for replay detection |
+
+Initial tenant roles are OWNER, ADMIN and MEMBER. These are tenant-administration roles, not the future application-level Editor/Viewer permission model. Fine-grained resource, field and record permissions will be designed with the permission engine.
+
+A refresh token is a high-entropy opaque random secret. Store a SHA-256 hash rather than the raw token. Passwords are human-chosen and require a deliberately slow password hash such as Argon2id; machine-generated refresh tokens have high entropy and can use a fast cryptographic hash.
+
+A refresh operation must atomically consume the presented token and create its replacement. If a consumed token is presented again, treat it as possible token theft and revoke the affected session/token family. Multiple devices create independent sessions.
+
+## 12. Authentication transaction and session lifecycle
+
+Registration is a single database transaction:
+
+1. Validate and normalize email and validate the requested tenant name.
+2. Hash the password with Argon2id before entering the transaction where practical.
+3. Create the user.
+4. Create the first tenant and a collision-safe slug.
+5. Create tenant membership with OWNER role.
+6. Create the authentication session.
+7. Create the initial refresh-token hash record.
+8. Commit, then issue the access JWT and set the refresh cookie.
+
+A failure at any database step rolls back all database records. Do not create a user without the associated first tenant and OWNER membership.
+
+Refresh rotation must use a transaction and conditional consume/update so concurrent refresh requests cannot both successfully rotate the same token. Keep enough token history to detect replay until the session retention window expires.
+## 13. Deferred storage approaches
 
 Not part of the first MVP:
 - Dedicated physical tables for every tenant-defined resource.
@@ -210,7 +246,7 @@ Not part of the first MVP:
 
 These options may be reconsidered when workload, compliance or customer isolation requirements justify their operational cost.
 
-## 13. Related documents
+## 14. Related documents
 
 - [System architecture](../01-architecture/system-architecture.md)
 - [Engine contracts](../01-architecture/engine-contracts.md)
@@ -225,3 +261,4 @@ These options may be reconsidered when workload, compliance or customer isolatio
 |---|---|---|
 | 0.1 | 2026-11-10 | Initial proposed logical data model and storage strategy |
 | 0.2 | 2026-11-10 | Record the initial Prisma identity and tenancy schema slice |
+| 0.3 | 2026-11-12 | Add custom authentication, tenant roles, session and refresh-token storage design |

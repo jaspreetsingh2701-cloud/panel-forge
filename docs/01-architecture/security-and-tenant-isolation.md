@@ -1,11 +1,11 @@
 ---
 title: PanelForge security and tenant isolation
 status: Proposed
-version: 0.1
-last_updated: 2026-11-10
+version: 0.2
+last_updated: 2026-11-12
 owner: Project maintainers
 source_of_truth: true
-related_adrs: []
+related_adrs: [ADR-007, ADR-008]
 ---
 
 # PanelForge security and tenant isolation
@@ -38,13 +38,40 @@ Treat browser input, URL parameters, stored customer configuration and external 
 
 ## 4. Authentication
 
-The identity provider authenticates the user. The API validates the access token or trusted session assertion independently.
+### 4.1 MVP identity model
 
-For token-based API access, validate signature using trusted issuer keys, issuer, audience, expiration and relevant time claims, plus required subject and identity claims.
+The MVP uses custom email/password authentication implemented in NestJS. Passwords are hashed with Argon2id; plaintext passwords are never stored or logged. Email is normalized consistently before uniqueness checks. Registration creates a user, first tenant and OWNER membership atomically.
 
-Resolve the platform user and current tenant membership server-side. Authentication answers who the user is; it does not automatically establish access to every tenant or application.
+Email verification and password recovery are deferred from the first implementation slice, but must be completed before production launch. Until then, registration is a controlled learning/MVP workflow, not a production-ready identity lifecycle.
 
-The specific OIDC provider remains an open technology decision.
+### 4.2 Access and refresh tokens
+
+- Access token: signed JWT with a 15-minute initial lifetime.
+- Refresh token: cryptographically random opaque value, rotated on every refresh.
+- Persistence: store only a SHA-256 hash of the refresh token. Its high entropy makes a fast cryptographic hash appropriate; passwords require a deliberately slow hash such as Argon2id.
+- Replay detection: reuse of a consumed refresh token revokes the associated session/token family.
+- Session lifetime: 30-day absolute lifetime initially, with explicit revocation and expiry.
+- Device model: each device/browser login receives a separate session.
+- Logout: revoke the current session and clear the cookie.
+- JWT validation checks signature, issuer, audience, expiration and required claims.
+
+The JWT identifies the user; it is not proof of tenant membership.
+
+### 4.3 Browser storage and same-origin proxy
+
+The browser holds the short-lived access token in memory only and sends it as a bearer token. Never place access or refresh tokens in localStorage or sessionStorage.
+
+The refresh token is delivered as a Secure, HttpOnly, SameSite=Lax cookie. Browser requests go to the Next.js same-origin proxy, which forwards the request and required authentication headers/cookies to the trusted NestJS origin. NestJS remains the authority for authentication and authorisation.
+
+For cookie-authenticated state-changing endpoints, validate Origin and apply CSRF protection appropriate to the deployment. Configure cookie domain/path deliberately. Never log token values or forward cookies to an untrusted upstream.
+
+### 4.4 Tenant membership
+
+Resolve the platform user and current tenant membership server-side. Authentication answers who the user is; it does not automatically establish access to every tenant or application. The active tenant is selected by the user but verified against current membership on every protected operation.
+
+### 4.5 Deferred identity integrations
+
+Google sign-in and other OIDC integrations are deferred until the email/password flow works. The platform User remains the primary identity; future provider identities should link to it rather than replacing it. See ADR-007.
 
 ## 5. Tenant isolation
 
@@ -162,7 +189,9 @@ Required negative tests include:
 
 ## 13. Open decisions
 
-- OIDC identity provider.
+- Email verification and password-reset delivery/provider.
+- Production password policy, abuse controls and rate limits.
+- Google/OIDC account linking and identity-provider integration.
 - Secrets manager and encryption-key lifecycle.
 - PostgreSQL row-level security adoption and transaction context strategy.
 - Audit retention and data deletion policy.
@@ -185,3 +214,4 @@ These must be resolved before the corresponding production-facing capabilities a
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-11-10 | Initial proposed security and tenant-isolation model |
+| 0.2 | 2026-11-12 | Define custom authentication, refresh-token rotation, browser storage and proxy security |

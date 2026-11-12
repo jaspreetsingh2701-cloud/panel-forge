@@ -1,8 +1,8 @@
 ---
 title: PanelForge delivery roadmap
 status: Proposed
-version: 0.1
-last_updated: 2026-11-10
+version: 0.2
+last_updated: 2026-11-12
 source_of_truth: true
 ---
 
@@ -29,11 +29,13 @@ Exit when blocking choices for Phase 1 are resolved and docs are internally cons
 - Initial GitHub Actions CI and test harness.
 
 ## Phase 2 — Identity, tenancy and first vertical slice
-**Outcome:** user signs in, creates a tenant/application and only accesses their own workspace.
-- OIDC integration.
-- Users, memberships and application creation.
+**Outcome:** user registers/signs in, creates a tenant/application and only accesses their own workspace.
+- Custom NestJS email/password authentication for the MVP.
+- Users, tenant memberships, tenant-scoped roles and revocable refresh sessions.
+- Next.js same-origin API proxy to the separately deployable NestJS API.
 - Tenant-aware service/repository patterns.
 - Cross-tenant negative tests and basic workspace UI.
+- Google/OIDC and managed identity providers are post-MVP learning options, not Phase 2 dependencies.
 
 ## Phase 2.5 — Engineering quality foundation
 ESLint, Prettier, Husky, lint-staged, Commitlint, Conventional Commits, Changesets, Jest, RTL, Playwright, coverage, Swagger/OpenAPI, CI, staging baseline and security scanning.
@@ -58,6 +60,12 @@ Predefined safe actions, immutable snapshots, atomic activation, rollback, audit
 
 ## Phase 9 — Production hardening
 Observability, backups/restore drills, rate/query limits, security review, deployment rollback, performance and accessibility.
+
+## Post-MVP engineering learning
+
+After the end-to-end MVP works, revisit cloud deployment alternatives (AWS, Google Cloud and Azure), Nginx/reverse proxies, DNS/TLS/HTTPS, OAuth/OIDC/Google sign-in, managed identity providers, WCAG accessibility, Core Web Vitals, observability, reliability, infrastructure as code, Kubernetes and backend architecture alternatives.
+
+Track practical experiments, comparisons and decisions in the [Post-MVP engineering learning checklist](post-mvp-engineering-learning-checklist.md). These topics are not MVP blockers.
 
 ## Scope protection
 Defer billing, marketplace, AI generation, arbitrary JS, advanced workflow branching, enterprise SSO/SCIM, custom domains, dedicated databases and multi-region deployment unless validated customer needs change priorities.
