@@ -26,13 +26,13 @@ Phase 2's broader application/resource tenancy operations remain part of the upc
 
 | Batch | Status | Notes |
 |---|---|---|
-| 2.5.1 CI baseline | In review | PR adds frozen-lockfile GitHub Actions checks for API/web typecheck and builds |
-| 2.5.2 Lint, formatting and commit hooks | Pending | ESLint, Prettier enforcement, Husky, lint-staged and Commitlint |
+| 2.5.1 CI baseline | Complete | PR #15 merged; GitHub Actions runs frozen-lockfile install, API/web typecheck and builds |
+| 2.5.2 Lint, formatting and commit hooks | In progress | ESLint, Prettier enforcement, Husky, lint-staged, Commitlint and Changesets |
 | 2.5.3 Unit/component/integration tests | Pending | Jest, React Testing Library, PostgreSQL integration setup and coverage |
 | 2.5.4 E2E, API contract and security scans | Pending | Playwright, Swagger/OpenAPI and security scanning |
 | 2.5.5 Staging and release workflow | Pending | Protected staging, smoke tests and rollback checklist |
 
-See the [Phase 2.5 engineering quality plan](../06-operations/phase-2-5-engineering-quality-plan.md) for batch scope and exit criteria.
+See the Phase 2.5 engineering quality plan for batch scope and exit criteria.
 
 ## Next milestone
 

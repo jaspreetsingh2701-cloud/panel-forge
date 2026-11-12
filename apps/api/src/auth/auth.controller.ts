@@ -29,7 +29,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   @Post('register')
   async register(
@@ -52,7 +52,8 @@ export class AuthController {
     });
 
     // The refresh token is returned only as a cookie, never in JSON.
-    const { refreshToken, ...responseBody } = result;
+    const responseBody = { ...result };
+    delete (responseBody as Partial<typeof result>).refreshToken;
 
     return responseBody;
   }
@@ -78,16 +79,14 @@ export class AuthController {
     });
 
     // Never expose the refresh token in the JSON response.
-    const { refreshToken, ...responseBody } = result;
+    const responseBody = { ...result };
+    delete (responseBody as Partial<typeof result>).refreshToken;
 
     return responseBody;
   }
 
   @Post('refresh')
-  async refresh(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     // Read the refresh token from the incoming Cookie header.
     const cookieHeader = request.headers.cookie ?? '';
     const cookiePrefix = `${REFRESH_COOKIE_NAME}=`;
@@ -97,9 +96,7 @@ export class AuthController {
       .map((cookie) => cookie.trim())
       .find((cookie) => cookie.startsWith(cookiePrefix));
 
-    const rawRefreshToken = refreshCookie
-      ? refreshCookie.slice(cookiePrefix.length)
-      : undefined;
+    const rawRefreshToken = refreshCookie ? refreshCookie.slice(cookiePrefix.length) : undefined;
 
     const result = await this.authService.refresh(rawRefreshToken);
 
@@ -113,7 +110,8 @@ export class AuthController {
     });
 
     // Never return the refresh token in JSON.
-    const { refreshToken, ...responseBody } = result;
+    const responseBody = { ...result };
+    delete (responseBody as Partial<typeof result>).refreshToken;
 
     return responseBody;
   }
@@ -122,15 +120,10 @@ export class AuthController {
   // This allows repeated logout calls with the same valid JWT.
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const authorization = request.headers.authorization;
 
-    const match = authorization
-      ? /^Bearer\s+(\S+)$/i.exec(authorization)
-      : null;
+    const match = authorization ? /^Bearer\s+(\S+)$/i.exec(authorization) : null;
 
     if (!match) {
       this.clearRefreshCookie(response);
@@ -146,10 +139,7 @@ export class AuthController {
       throw new UnauthorizedException();
     }
 
-    if (
-      typeof payload.sub !== 'string' ||
-      typeof payload.sid !== 'string'
-    ) {
+    if (typeof payload.sub !== 'string' || typeof payload.sid !== 'string') {
       this.clearRefreshCookie(response);
       throw new UnauthorizedException();
     }
