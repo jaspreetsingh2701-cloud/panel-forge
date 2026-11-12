@@ -102,7 +102,8 @@ export default function ApplicationsPage() {
   }
 
   if (!user) return <main className="app-loading page-shell"><span className="brand-mark">P</span><p>{isLoading ? 'Restoring your session…' : 'Opening your workspace…'}</p></main>;
-  const greeting = user.displayName || user.email;\n  const canManage = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
+  const greeting = user.displayName || user.email;
+  const canManage = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
 
   return (
     <main className="app-shell">
