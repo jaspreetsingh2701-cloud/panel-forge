@@ -111,9 +111,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setTenants([]);
     if (token) {
-      await fetch('/api/v1/auth/logout', {
-        method: 'POST', credentials: 'include', headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        await fetch('/api/v1/auth/logout', {
+          method: 'POST', credentials: 'include', headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {
+        // Local sign-out still completes if the API is unreachable.
+      }
     }
   }, [accessToken]);
 
