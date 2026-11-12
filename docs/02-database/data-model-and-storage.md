@@ -198,7 +198,7 @@ The first Prisma schema intentionally establishes only the identity and tenancy 
 
 The initial schema uses UUID primary keys, timestamp columns and relational foreign keys. Membership records reference both a user and tenant. Deleting a user or tenant cascades to its membership rows; audit history and published snapshots will use stricter retention rules when those models are introduced.
 
-The Prisma schema is the implementation source for these models. The initial migration is generated and reviewed as part of the database-foundation implementation; the broader logical model in this document remains a forward-looking design, not a claim that every listed entity already exists in the database.
+The Prisma schema is the implementation source for these models. The initial migration created User, Tenant and TenantMember. The Phase 2.1 migration adds password/email-verification fields, tenant roles, AuthSession and RefreshToken. These schema and migration changes are awaiting local Prisma validation and review; the broader logical model remains forward-looking, not a claim that every listed entity exists in the database.
 
 ### Authentication model
 
@@ -206,9 +206,9 @@ The existing Prisma schema already establishes User, Tenant and TenantMember. Ph
 
 | Prisma model | Key fields | Notes |
 |---|---|---|
-| User | email, passwordHash, displayName, emailVerifiedAt | Normalized unique email; Argon2id password hash |
+| User | email, passwordHash, displayName, emailVerifiedAt | Normalized unique email; nullable Argon2id hash to permit future OIDC-only identities |
 | Tenant | name, slug, status | First tenant is created during registration |
-| TenantMember | tenantId, userId, role, status | Unique tenant/user pair; initial role is OWNER |
+| TenantMember | tenantId, userId, role, status | Unique tenant/user pair; registration explicitly assigns OWNER (schema default is MEMBER) |
 | AuthSession | userId, createdAt, expiresAt, revokedAt, lastUsedAt | One row per device/browser session |
 | RefreshToken | sessionId, tokenHash, expiresAt, consumedAt, revokedAt | Store hash only; retain consumed-token evidence for replay detection |
 
