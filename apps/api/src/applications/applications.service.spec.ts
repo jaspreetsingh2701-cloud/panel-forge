@@ -22,7 +22,7 @@ describe('ApplicationsService', () => {
     expect(prisma.application.findMany).not.toHaveBeenCalled();
   });
 
-  it('creates an application under the authorised tenant and normalises text', async () => {
+  it('denies application creation to regular workspace members', async () => {\n    prisma.tenantMember.findFirst.mockResolvedValue({ role: 'MEMBER' });\n    await expect(service.create('user-1', 'tenant-1', { name: 'Inventory' })).rejects.toBeInstanceOf(ForbiddenException);\n    expect(prisma.application.create).not.toHaveBeenCalled();\n  });\n\n  it('creates an application under the authorised tenant and normalises text', async () => {
     prisma.tenantMember.findFirst.mockResolvedValue({ id: 'membership-1' });
     prisma.application.create.mockResolvedValue({ id: 'app-1' });
     await service.create('user-1', 'tenant-1', { name: ' Inventory ', description: ' Manage stock ', template: 'operations' });
