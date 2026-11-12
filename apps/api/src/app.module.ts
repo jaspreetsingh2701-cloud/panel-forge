@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from './database/prisma.module';
 import { HealthController } from './health/health.controller';
 import { ValidationDemoController } from './validation-demo/validation-demo.controller';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, AuthModule],
   controllers: [HealthController, ValidationDemoController],
   providers: [],
 })
