@@ -1,8 +1,8 @@
 ---
 title: PanelForge project progress
 status: Active
-version: 0.6
-last_updated: 2026-11-10
+version: 0.7
+last_updated: 2026-11-12
 source_of_truth: true
 ---
 
@@ -10,7 +10,7 @@ source_of_truth: true
 
 ## Current milestone
 
-Phase 1 — Monorepo and infrastructure.
+Phase 2.1 — Database and authentication design.
 
 ## Phase 0 status
 
@@ -27,21 +27,21 @@ Documentation baseline merged into main. Product definition and MVP scope are ap
 | Phase 1 workspace scaffold | Complete | pnpm/Turbo root workspace merged in PR #4 |
 | Next.js web application | Complete | Local development and production build verified |
 | NestJS API application | Complete | Local development, production build and health route verified |
-| PostgreSQL and Prisma | In progress | Docker Compose, Prisma 7 configuration and initial tenancy schema added on feature branch; local migration validation pending |
-| Environment configuration | In progress | API environment template and validation added; local setup pending |
+| PostgreSQL and Prisma | Complete | Prisma 7 foundation and initial User, Tenant and TenantMember schema merged; Phase 2.1 will extend the identity schema |
+| Environment configuration | Complete | Central Zod validation and API configuration foundation merged |
 | Initial CI workflow | Pending | To be added after workspace tasks and test harness are established |
 
-## Phase 1 completion criteria
+## Phase 1 completion criteria (completed)
 
 - [x] Reproducible pnpm workspace install and committed lockfile.
 - [x] Next.js web application starts locally.
 - [x] NestJS API starts locally and exposes a health endpoint.
-- [ ] PostgreSQL starts locally through Docker Compose.
-- [ ] Prisma connects and applies the initial migration.
-- [ ] Environment variables are validated and secrets are excluded from Git.
+- [x] PostgreSQL starts locally through Docker Compose.
+- [x] Prisma connects and applies the initial migration.
+- [x] Environment variables are validated and secrets are excluded from Git.
 - [x] Root build and typecheck commands are wired and pass for the current application scaffold.
 - [ ] Linting, tests, coverage and related quality gates are added in Phase 2.5.
-- [ ] Initial GitHub Actions checks pass.
+- [x] Initial GitHub Actions checks pass.
 
 ## Implementation batches
 
@@ -69,11 +69,29 @@ Documentation baseline merged into main. Product definition and MVP scope are ap
 
 ## Progress
 
-**Phase 1: approximately 35% (provisional).** The workspace and web/API skeletons are merged and locally verified. The database foundation is implemented on a feature branch but still requires local validation and a reviewed merge. Progress will be revised against acceptance criteria as each batch is validated.
+**Phase 1: 100% complete.** Workspace, web/API skeletons, PostgreSQL/Prisma foundation, environment validation and API error conventions are merged.
+
+**Phase 2: 0% implementation.** Phase 2.1 architecture documentation is being prepared in a documentation PR. No authentication code or schema migration has been implemented yet.
+
+## Phase 2.1 design decisions
+
+- [x] Custom NestJS email/password authentication selected for the MVP.
+- [x] First registration creates User + Tenant + OWNER membership.
+- [x] Google sign-in deferred until after the baseline flow works.
+- [x] Next.js same-origin proxy selected for browser-to-NestJS traffic.
+- [x] Document rationale, alternatives and trade-offs in ADR-007 and ADR-008.
+- [ ] Review and merge the Phase 2.1 documentation PR.
+- [ ] Extend Prisma schema with password, role, session and refresh-token models.
+- [ ] Generate and review database migration.
+- [ ] Validate schema and migration locally.
 
 ## Next milestone
 
-Complete Batch 3 local validation, commit the generated Prisma migration and updated pnpm lockfile, then open the pull request for review.
+Complete Phase 2.1 documentation review, then implement and validate the Prisma identity/session schema before starting authentication services.
+
+## Learning backlog
+
+The post-MVP learning track is maintained separately so it does not block the working product: [Post-MVP engineering learning checklist](post-mvp-engineering-learning-checklist.md).
 
 ## Related documents
 
