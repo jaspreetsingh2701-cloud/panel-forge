@@ -5,8 +5,9 @@ import { ValidationDemoController } from './validation-demo/validation-demo.cont
 import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { ApplicationsModule } from './applications/applications.module';
+import { MembersModule } from './members/members.module';
 @Module({
-  imports: [DatabaseModule, AuthModule, TenantsModule, ApplicationsModule],
+  imports: [DatabaseModule, AuthModule, TenantsModule, ApplicationsModule, MembersModule],
   controllers: [HealthController, ValidationDemoController],
   providers: [],
 })
