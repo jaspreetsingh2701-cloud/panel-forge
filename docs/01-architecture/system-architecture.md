@@ -1,11 +1,11 @@
 ---
 title: PanelForge system architecture
 status: Proposed
-version: 0.1
-last_updated: 2026-11-10
+version: 0.2
+last_updated: 2026-11-12
 owner: Project maintainers
 source_of_truth: true
-related_adrs: []
+related_adrs: [ADR-007, ADR-008]
 ---
 
 # PanelForge system architecture
@@ -34,6 +34,7 @@ PanelForge will start as a modular monolith with two deployable applications:
 
 - **Web application:** one Next.js deployment containing the builder, preview and published runtime routes.
 - **API application:** one NestJS deployment containing domain modules and the platform's trusted business logic.
+- **Browser-to-API path:** browser requests use a same-origin Next.js API proxy which forwards supported API traffic to the separately deployable NestJS API.
 
 PostgreSQL is the primary persistent store. Additional infrastructure such as Redis, a worker process and object storage is introduced when a concrete feature requires it.
 
@@ -105,7 +106,7 @@ The route naming is illustrative and may change during implementation. The publi
 
 The API owns:
 
-- Identity-token validation integration and user resolution.
+- Custom email/password authentication, access-token validation, refresh-session lifecycle and user resolution.
 - Tenant membership and application access.
 - Metadata validation and persistence.
 - Dynamic data reads and writes.
@@ -370,15 +371,60 @@ Potential future additions:
 
 | Topic | Current direction | Revisit when |
 |---|---|---|
-| Identity provider | OIDC-compatible provider; exact provider pending | Before auth implementation |
-| Hosting topology | Web and API as separate deployables | Infrastructure design |
+| Authentication | Custom NestJS email/password for the MVP; Google/OIDC deferred | Revisit after the working MVP |
+| Hosting topology | Next.js and NestJS are separate deployables; Next.js proxies browser API requests | Revisit during cloud deployment comparisons |
 | Background jobs | No worker initially | First long-running or scheduled job |
 | Redis | Deferred | Queue, cache or coordination requirement exists |
 | Runtime deployment | Shared renderer in Next.js web app | Independent scaling or release cadence is needed |
 | PostgreSQL row-level security | Evaluate as defence in depth | Database access patterns are established |
 | External data sources | Adapter boundary; PostgreSQL first | REST connector implementation begins |
 
-## 14. Related documents
+### 5.3 Browser-to-API proxy — Next.js
+
+The browser calls the Next.js origin under /api/v1/*. Next.js forwards those requests to the separately deployed NestJS API. The proxy is a transport boundary, not a second business-logic layer.
+
+Responsibilities:
+- Forward the intended HTTP method, path, query string and request body.
+- Forward the Authorization header when present.
+- Forward the refresh cookie only to the configured trusted API origin.
+- Relay relevant response headers, including Set-Cookie on authentication responses.
+- Preserve request correlation headers such as X-Request-Id.
+- Never accept an arbitrary upstream URL from the browser.
+
+**Why selected:** browser traffic remains same-origin, avoiding browser-facing CORS and cross-origin cookie complexity; the refresh token can remain in a Secure, HttpOnly cookie; the browser does not need to know the API hostname; NestJS remains independently deployable; and the pattern gives us a practical way to learn reverse-proxy concepts without adding a dedicated gateway.
+
+**Trade-offs:** this adds a network hop and makes the Next.js deployment part of browser API availability. It adds timeout, streaming, request-size, header-forwarding and operational-debugging concerns. The proxy must not cache authenticated responses or log credentials. It does not replace NestJS authentication, authorisation, validation or tenant isolation, and it is not a complete API gateway. See ADR-008.
+
+## 14. Authentication flow (MVP)
+
+Registration creates the user, first tenant, OWNER membership and initial session in one database transaction. The API issues a short-lived access JWT and a high-entropy opaque refresh token. The refresh token is stored as a hash in PostgreSQL and delivered through a Secure, HttpOnly cookie. The browser keeps the access token in memory and sends it as a bearer token.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Browser
+    participant Next as Next.js same-origin proxy
+    participant API as NestJS API
+    participant DB as PostgreSQL
+    User->>Browser: Submit registration
+    Browser->>Next: POST /api/v1/auth/register
+    Next->>API: Forward request
+    API->>API: Validate DTO and hash password
+    API->>DB: Transaction: create user, tenant, OWNER membership, session and refresh-token hash
+    DB-->>API: Commit
+    API-->>Next: Access JWT + Set-Cookie refresh token
+    Next-->>Browser: Relay response and cookie
+    Browser->>Browser: Keep access JWT in memory
+    Browser->>Next: Protected request with Bearer JWT
+    Next->>API: Forward Authorization header
+    API->>DB: Resolve current membership and authorisation
+    API-->>Browser: Protected response via proxy
+```
+
+Refresh requests use the HttpOnly cookie. The API validates and rotates the token, persists the new token hash, and returns the replacement cookie. Reuse of a previously consumed refresh token revokes the associated session. Logout revokes the current session.
+
+Initial values: 15-minute access JWT; refresh rotation on every use; 30-day absolute session lifetime; separate sessions per device. Revisit these values after threat modelling. Use Secure, HttpOnly and SameSite=Lax cookies in production, validate Origin on cookie-authenticated state-changing endpoints, and implement CSRF protection appropriate to the deployed topology. Never store tokens in localStorage.
+## 15. Related documents
 
 - [Product definition](../00-product/product-definition.md)
 - [MVP scope](../00-product/mvp-scope.md)
@@ -393,3 +439,4 @@ Potential future additions:
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-11-10 | Initial proposed system architecture for the PanelForge MVP |
+| 0.2 | 2026-11-12 | Document custom authentication, same-origin proxy, rationale, trade-offs and request flow |
