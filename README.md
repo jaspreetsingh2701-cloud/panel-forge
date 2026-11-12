@@ -4,8 +4,7 @@ PanelForge is a multi-tenant SaaS platform for visually building, configuring an
 
 Teams connect data sources, define resources and custom fields, design forms, tables and dashboards, configure access policies, and publish versioned admin experiences.
 
-> **Project status:** Phase 0 documentation baseline drafted; review and approval remain before implementation.
-> **Current focus:** Architecture, data model, API, security and engineering delivery standards.
+> **Project status:** Phase 2 authentication and workspace foundation is merged. The current focus is Phase 2.5 engineering quality tooling before metadata and dynamic CRUD work.
 
 ## Product direction
 
@@ -21,6 +20,7 @@ The initial MVP demonstration:
 7. Another team member signs in and sees only permitted data and actions.
 
 ## Principles
+
 - Documentation-driven development.
 - Security and tenant isolation by design.
 - Modular monolith first.
@@ -28,31 +28,46 @@ The initial MVP demonstration:
 - Tests, documentation and CI are part of feature completion.
 
 ## Repository layout
+
 ```text
 panelforge/
+├── .github/
+│   ├── workflows/
+│   └── pull_request_template.md
+├── apps/
+│   ├── api/
+│   └── web/
 ├── docs/
 │   ├── 00-product/
 │   ├── 01-architecture/
 │   ├── 02-database/
-│   ├── 03-engines/
-│   ├── 04-features/
 │   ├── 05-api/
 │   ├── 06-operations/
 │   ├── 07-project-management/
 │   └── adr/
-├── .gitignore
-└── README.md
+└── packages/
 ```
 
 ## Start here
+
 - [Documentation index](docs/README.md)
 - [Product definition](docs/00-product/product-definition.md)
 - [MVP scope](docs/00-product/mvp-scope.md)
-- [Phase 0 tracker](docs/07-project-management/phase-0-architecture-baseline.md)
 - [Roadmap](docs/07-project-management/roadmap.md)
+- [Project progress](docs/07-project-management/progress.md)
+- [Phase 2.5 engineering quality plan](docs/06-operations/phase-2-5-engineering-quality-plan.md)
 
-## Development status
-The repository currently contains the documentation baseline. Implementation begins after Phase 0 decisions are reviewed and approved. See [project progress](docs/07-project-management/progress.md).
+## Development
+
+Use the Node.js version in `.nvmrc` and the pnpm version declared in the root `package.json`.
+
+- Install: `pnpm install`
+- Run apps: `pnpm dev`
+- Typecheck: `pnpm typecheck`
+- Build: `pnpm build`
+
+See [API setup](apps/api/README.md) and [web setup](apps/web/README.md) for application-specific instructions.
 
 ## License
+
 No open-source license has been selected. Until one is added, all rights are reserved by the project owner.
