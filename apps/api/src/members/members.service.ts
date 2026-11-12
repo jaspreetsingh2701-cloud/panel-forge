@@ -4,12 +4,16 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 @Injectable()
 export class MembersService {
  constructor(private readonly prisma:PrismaService){}
- private async memberAccess(userId:string,tenantId:string){\n  const m=await this.prisma.tenantMember.findFirst({where:{userId,tenantId,status:'ACTIVE',tenant:{status:'ACTIVE'}},select:{role:true}});\n  if(!m)throw new ForbiddenException('You do not have access to this workspace.');\n }\n private async manager(userId:string,tenantId:string,ownerOnly=false){
+ private async memberAccess(userId:string,tenantId:string){
+  const m=await this.prisma.tenantMember.findFirst({where:{userId,tenantId,status:'ACTIVE',tenant:{status:'ACTIVE'}},select:{role:true}});
+  if(!m)throw new ForbiddenException('You do not have access to this workspace.');
+ }
+ private async manager(userId:string,tenantId:string,ownerOnly=false){
   const m=await this.prisma.tenantMember.findFirst({where:{userId,tenantId,status:'ACTIVE',tenant:{status:'ACTIVE'}},select:{role:true}});
   if(!m||!(ownerOnly?m.role==='OWNER':['OWNER','ADMIN'].includes(m.role))) throw new ForbiddenException(ownerOnly?'Only the workspace owner can change member roles.':'Only workspace owners and admins can manage invitations.');
  }
  async listMembers(userId:string,tenantId:string){
-  await this.manager(userId,tenantId);
+  await this.memberAccess(userId,tenantId);
   return this.prisma.tenantMember.findMany({where:{tenantId,status:'ACTIVE'},orderBy:{createdAt:'asc'},select:{id:true,role:true,status:true,createdAt:true,user:{select:{id:true,email:true,displayName:true}}}});
  }
  async updateMemberRole(userId:string,tenantId:string,memberId:string,role:'ADMIN'|'MEMBER'){
