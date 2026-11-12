@@ -114,7 +114,7 @@ export default function ApplicationsPage() {
           <Link className="sidebar-link" href="/app"><span>▦</span> Overview</Link>
           <Link className="sidebar-link sidebar-link--active" href="/applications" aria-current="page"><span>◫</span> Applications</Link>
           <a className="sidebar-link sidebar-link--disabled" href="#data-sources"><span>⌘</span> Data sources <span className="pf-badge">Coming soon</span></a>
-          <a className="sidebar-link sidebar-link--disabled" href="#members"><span>♧</span> Members <span className="pf-badge">Coming soon</span></a>
+          <Link className="sidebar-link" href="/members"><span>♧</span> Members</Link>
         </nav>
         <div className="sidebar-bottom"><p className="sidebar-label">ACCOUNT</p><div className="account-mini"><span className="user-avatar">{greeting.slice(0, 1).toUpperCase()}</span><span><strong>{greeting}</strong><small>{user.email}</small></span></div></div>
       </aside>

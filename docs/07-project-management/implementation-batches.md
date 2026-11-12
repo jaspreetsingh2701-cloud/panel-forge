@@ -18,7 +18,7 @@ Every product pull request delivers a coherent, reviewable vertical slice and in
 |---|---|---|
 | 3.1 | Applications workspace UI and creation flow | Application library, empty state, create dialog and draft cards |
 | 3.2 | Persist applications in PostgreSQL; tenant-scoped API | In review — PR #19; applications survive reload with create/list/archive UI |
-| 3.3 | Workspace member management and invitations foundation | Members screen, role labels and invite flow foundation |
+| 3.3 | Workspace member management and invitations foundation | Members screen, active member list, role labels, pending invitations and revoke flow |
 | 3.4 | Platform RBAC and policy primitives | Roles and permission management screen with enforced API policies |
 
 ## Phase 4 — Custom data model and data engine

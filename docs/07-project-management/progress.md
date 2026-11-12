@@ -27,7 +27,7 @@ Phase 3 — Workspace and application foundation.
 |---|---|---|
 | 3.1 Applications workspace UI | Complete | Applications library and create flow; PR #18 |
 | 3.2 Persisted applications and tenant-scoped API | In review | PostgreSQL model/migration, authenticated list/create/archive endpoints, persistent UI and tenant access tests; PR #19 |
-| 3.3 Workspace members and invitations | Pending | Members screen and invitation foundation |
+| 3.3 Workspace members and invitations | In review | Members screen, active member list, role labels, tenant-scoped invitation creation/list/revocation and manager-only access; PR pending |
 | 3.4 Platform RBAC and policy primitives | Pending | Roles and permission management with server-side enforcement |
 
 ## Upcoming product phases
