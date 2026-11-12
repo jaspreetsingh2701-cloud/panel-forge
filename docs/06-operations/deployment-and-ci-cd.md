@@ -1,76 +1,53 @@
 ---
 title: PanelForge deployment and CI/CD
-status: Proposed
-version: 0.1
-last_updated: 2026-11-10
+status: Active
+version: 0.3
+last_updated: 2026-11-13
 source_of_truth: true
 ---
 
 # PanelForge deployment and CI/CD
 
 ## Environments
+
 - Local: pnpm workspace and Docker Compose dependencies.
-- CI: isolated test/build environment.
-- Staging: integrated acceptance and smoke tests.
-- Production: customer-facing, protected by approval.
+- CI: disposable PostgreSQL 17 service, migrations, tests, builds and security scans.
+- Staging: protected environment for integrated acceptance and smoke tests.
+- Production: not enabled in this MVP phase.
 
-Keep secrets and data separate. Never copy production customer data into local or CI environments.
+## MVP hosting
 
-## Pull request quality gates
-1. Install dependencies from lockfile.
-2. Prettier check and ESLint.
-3. TypeScript checks.
-4. Markdown lint and link validation.
-5. Unit tests and coverage thresholds.
-6. PostgreSQL-backed integration tests for affected modules.
-7. OpenAPI generation and validation.
-8. Web/API production builds.
-9. Dependency and secret scanning.
-10. Container build and scan when relevant.
+The selected evaluation topology is Cloudflare Workers for Next.js (subject to adapter validation), Render free web service for NestJS, Neon free PostgreSQL and GitHub Actions. See [ADR-0001](../01-architecture/decisions/0001-free-tier-mvp-hosting.md). Free tiers are managed services, not an all-open-source hosting stack.
 
-A failed required check blocks merge.
+## Pull request gates
 
-## GitHub Actions layout
-```
-.github/
-  workflows/
-    ci.yml
-    deploy-staging.yml
-    deploy-production.yml
-    security-scan.yml
-  pull_request_template.md
-```
-Avoid duplicated workflow logic; use reusable workflows/composite actions where useful.
+1. Frozen lockfile install, formatting and lint.
+2. API unit and web component tests with per-file coverage.
+3. PostgreSQL integration test after Prisma migrations.
+4. API/web typechecks and production builds.
+5. Playwright Chromium login-route smoke.
+6. Dependency review, Gitleaks and Trivy filesystem scan.
 
-## Branching and release
-Use short-lived feature branches and PRs. Protect main with required checks and review. For a solo MVP, main plus short-lived feature branches is sufficient; a long-lived develop branch is optional only if it solves a real coordination problem.
+## Staging smoke verification
 
-## Staging deployment
-Build immutable artifacts; apply backward-compatible migrations; deploy web/API; run health checks and smoke tests; verify tenant/auth/runtime journeys; retain previous artifacts for rollback.
+The manually triggered `.github/workflows/staging-smoke.yml` uses the protected GitHub Environment named `staging`. Configure `STAGING_WEB_URL` and `STAGING_API_URL` as environment secrets. It verifies the web origin and `/api/v1/health`.
 
-## Production deployment
-Require approved release and environment approval. Confirm backups and migration readiness. Apply safe migrations, deploy immutable artifacts, run smoke tests and monitor. Roll back application artifacts if health checks fail; database rollback requires a separately reviewed migration strategy. Prefer expand-and-contract migrations.
+This is a post-deployment verification gate, not a deployment mechanism. Actual deployment remains pending provider provisioning, provider credentials and a validated Cloudflare Next.js adapter deployment. Never commit secret values.
 
-## Supply-chain controls
-- Dependabot updates.
-- GitHub secret scanning/push protection where available.
-- Dependency audit.
-- Trivy or equivalent container scanning.
-- Least-privilege Actions permissions.
-- Pin third-party Actions to reviewed versions or commit SHAs.
-- Store deployment secrets in protected environments or cloud secret manager.
-- Never print secrets in logs.
-- SonarCloud/SonarQube is optional pending value/maintenance assessment.
+## Release and rollback checklist
 
-## Production readiness
-Health/readiness endpoints; correlation IDs and safe logs; metrics/error tracking; tested backups/restoration; migration plan; rate/query limits; security review; incident ownership and runbooks.
+Before staging release:
+- [ ] Confirm required CI/security checks pass and review the release commit.
+- [ ] Confirm TLS, CORS, health checks, connection pooling and provider quotas.
+- [ ] Apply backward-compatible Prisma migrations before dependent application code.
+- [ ] Deploy immutable web/API artifacts and retain previous known-good versions.
+- [ ] Run the protected staging smoke workflow and verify authentication manually.
+- [ ] Record release commit, migration version and deployment timestamps.
 
-## Related documents
-- [Testing strategy](testing-strategy.md)
-- [Versioning strategy](../07-project-management/versioning-strategy.md)
-- [Security](../01-architecture/security-and-tenant-isolation.md)
+If application health checks fail:
+- [ ] Roll back web/API artifacts to the previous known-good versions.
+- [ ] Re-run health and authentication smoke tests.
+- [ ] Do not automatically reverse database migrations; assess compatibility and restore only under an approved recovery plan.
+- [ ] Record the incident and corrective action before retrying.
 
-## Change history
-| Version | Date | Change |
-|---|---|---|
-| 0.1 | 2026-11-10 | Initial deployment and CI/CD strategy |
+Production deployment is not enabled in this phase.

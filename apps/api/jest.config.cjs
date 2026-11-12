@@ -1,0 +1,2 @@
+/** @type {import('jest').Config} */
+module.exports = { rootDir: '.', testEnvironment: 'node', testMatch: ['<rootDir>/src/**/*.spec.ts'], transform: { '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.json' }] }, collectCoverageFrom: ['src/health/health.controller.ts'], coverageThreshold: { './src/health/health.controller.ts': { branches: 70, functions: 70, lines: 70, statements: 70 } }, clearMocks: true };

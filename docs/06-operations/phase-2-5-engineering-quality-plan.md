@@ -1,61 +1,39 @@
 ---
 title: Phase 2.5 engineering quality plan
 status: Active
-version: 0.1
+version: 0.3
 last_updated: 2026-11-13
 source_of_truth: true
 ---
 
 # Phase 2.5 — Engineering quality foundation
 
-## Goal
+## Delivery status
 
-Establish repeatable local and pull-request checks before building the metadata engine. Quality tooling is delivered in small increments so every new gate is installable, reproducible and verified rather than adding untested dependencies in one large change.
-
-## Delivery batches
-
-| Batch | Scope | Exit criteria |
+| Batch | Scope | Status |
 |---|---|---|
-| 2.5.1 | GitHub Actions CI baseline and PR template | Clean frozen-lockfile install; API/web typecheck and production builds run on PRs and main |
-| 2.5.2 | ESLint, Prettier enforcement, Husky, lint-staged, Commitlint and Changesets | Local scripts and hooks work on Windows; Conventional Commits are enforced; lint/format checks pass in CI; Changesets can create and apply a version changeset |
-| 2.5.3 | Jest API tests, React Testing Library, coverage thresholds and PostgreSQL integration-test setup | Unit/component tests run locally and in CI; coverage reports and thresholds are enforced |
-| 2.5.4 | Playwright critical-path E2E, Swagger/OpenAPI, dependency/secret/container security scans | Browser journeys and API contract generation/validation run in CI; security checks are documented and actionable |
-| 2.5.5 | Staging workflow and release/rollback checklist | Protected staging deployment and smoke-test process is documented and verified |
+| 2.5.1 | CI baseline | Complete — PR #15 |
+| 2.5.2 | Lint, formatting and commit quality | Complete — PR #16 |
+| 2.5.3 | Jest API tests, React Testing Library, PostgreSQL integration and coverage | Implemented in PR #17; lockfile and validation pending |
+| 2.5.4 | Playwright smoke, Swagger/OpenAPI and security scans | Implemented in PR #17; validation pending; container scan deferred until a deployable image exists |
+| 2.5.5 | Protected staging smoke and release/rollback checklist | Smoke workflow added; actual deployment remains pending provider provisioning |
 
-Batches may be split into more than one PR when dependency or runtime validation requires it. Do not mark the phase complete until every batch has passed its exit criteria.
+## 2.5.3 — Tests
 
-## Batch 2.5.1 — CI baseline
+API unit tests use Jest/ts-jest and test the existing health controller, including propagation of database failures. Web component tests use Jest, jsdom and React Testing Library against the shared Button. PostgreSQL integration tests use the Prisma PostgreSQL adapter against a disposable PostgreSQL database after checked-in migrations are applied.
 
-Merged in PR #15:
-- GitHub Actions workflow runs on pull requests targeting main and pushes to main.
-- Uses the repository Node.js version and pinned pnpm version.
-- Installs dependencies with pnpm install --frozen-lockfile.
-- Runs API and web TypeScript checks and production builds.
-- Supplies non-production CI-only values for API configuration validation.
-- Adds a pull request template covering validation, tenancy and security considerations.
+Initial coverage gates (70% statements, branches, functions and lines) are scoped to the tested health controller and Button. Expand coverage as application modules gain meaningful tests; do not mask untested code with fake placeholder tests.
 
-The workflow deliberately does not start PostgreSQL: the current checks compile and build the applications but do not run database-backed tests. A PostgreSQL service will be added with the integration-test batch.
+## 2.5.4 — E2E, API contract and security
 
-## Batch 2.5.2 — Lint, formatting and commit quality
+Playwright runs a Chromium smoke test against the existing login route. Nest Swagger is enabled outside production at `/api/v1/docs`; the OpenAPI JSON is served at `/api/v1/openapi.json`. GitHub Actions runs dependency review, Gitleaks and Trivy filesystem scans for high/critical findings. Container scanning is deferred until a deployable image is checked in.
 
-In progress:
-- Add a shared ESLint flat configuration using the Next.js Core Web Vitals and TypeScript presets.
-- Keep Prettier as the formatting authority with a repository-level configuration and ignore file.
-- Add lint, lint:fix, format:check and Husky setup scripts.
-- Run lint-staged before commits and Commitlint against Conventional Commit messages.
-- Configure Changesets for controlled package versioning, including private workspace packages.
-- Run formatting and lint checks in GitHub Actions before typecheck/build.
+## 2.5.5 — Staging
 
-Hooks are developer convenience and local feedback, not a security boundary; CI remains authoritative. A committed pnpm lockfile update is required before the CI workflow can pass with the new dependencies.
+The manually triggered staging smoke workflow uses a protected GitHub Environment and requires `STAGING_WEB_URL` and `STAGING_API_URL` environment secrets. It verifies an already-deployed web app and API health endpoint; it does not provision providers or deploy artifacts. Actual staging deployment remains pending Cloudflare/Render/Neon provisioning, credentials and validation of the Next.js adapter.
 
-## Remaining work
-
-- Add unit, component and integration tests before enforcing coverage thresholds.
-- Add Playwright after stable end-to-end test fixtures and deterministic test data exist.
-- Generate and validate OpenAPI after controller DTOs and response contracts are documented.
-- Add security scanning with a clear triage policy; do not make noisy or unreviewed scans blocking by default.
-- Add staging deployment only after a deployable environment and protected secrets are configured.
+Before release, review migrations, TLS, CORS, connection pooling and provider quotas; deploy immutable artifacts; retain previous versions; run smoke checks. On application failure, roll back web/API artifacts first. Do not automatically reverse database migrations; use a reviewed recovery/restore plan.
 
 ## Definition of done
 
-Phase 2.5 is complete when all batches have verified local instructions, CI enforcement, documented failure handling and no unresolved critical security or reliability gaps.
+Phase 2.5 is not complete until the updated lockfile is committed, local and CI checks pass, staging is actually provisioned and smoke-verified, and release/rollback instructions are reviewed. A workflow file alone is not proof of deployment.
