@@ -102,7 +102,7 @@ export default function ApplicationsPage() {
   }
 
   if (!user) return <main className="app-loading page-shell"><span className="brand-mark">P</span><p>{isLoading ? 'Restoring your session…' : 'Opening your workspace…'}</p></main>;
-  const greeting = user.displayName || user.email;
+  const greeting = user.displayName || user.email;\n  const canManage = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
 
   return (
     <main className="app-shell">
@@ -121,7 +121,7 @@ export default function ApplicationsPage() {
       <section className="app-main">
         <header className="app-topbar"><div><Link className="breadcrumb-muted" href="/app">Workspace</Link><span className="breadcrumb-divider">/</span><strong>Applications</strong></div><div className="app-top-actions"><span className="topbar-user">{user.email}</span><ThemeToggle /></div></header>
         <div className="dashboard-content">
-          <div className="applications-heading"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>Applications <span>library.</span></h1><p>Build and organise the admin experiences your team relies on.</p></div><button className="pf-button pf-button--primary" type="button" onClick={() => setIsCreating(true)}>＋ New application</button></div>
+          <div className="applications-heading"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>Applications <span>library.</span></h1><p>Build and organise the admin experiences your team relies on.</p></div>{canManage && <button className="pf-button pf-button--primary" type="button" onClick={() => setIsCreating(true)}>＋ New application</button>}</div>
           <div className="applications-toolbar"><div><strong>{applications.length}</strong> {applications.length === 1 ? 'application' : 'applications'} <span>·</span> {tenant?.name ?? 'Workspace'}</div><span className="pf-badge pf-badge--info">Saved to workspace</span></div>
           {error && <p className="application-error" role="alert">{error}</p>}
           {isLoadingApplications ? <section className="applications-empty"><p>Loading your applications…</p></section> : applications.length === 0 ? (
@@ -133,7 +133,7 @@ export default function ApplicationsPage() {
                 <h2>{application.name}</h2><p>{application.description || 'No description added yet.'}</p>
                 <div className="application-card-meta"><span>{templates.find((item) => item.id === application.template)?.name ?? 'Custom application'}</span><span>Created {new Date(application.createdAt).toLocaleDateString()}</span></div>
                 <Link className="pf-button pf-button--ghost pf-button--sm" href={`/applications/${application.id}/resources`}>Manage data <span aria-hidden="true">→</span></Link>
-                <button className="application-archive" type="button" onClick={() => void archiveApplication(application.id)}>Archive</button>
+                {canManage && <button className="application-archive" type="button" onClick={() => void archiveApplication(application.id)}>Archive</button>}
               </article>
             ))}</div>
           )}
