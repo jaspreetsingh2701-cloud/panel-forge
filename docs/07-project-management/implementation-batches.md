@@ -77,3 +77,12 @@ Every product pull request delivers a coherent, reviewable vertical slice and in
 - Typecheck, lint, tests and build pass in CI.
 - Documentation and progress status are updated.
 - No deployment is performed before Phase 8.4.
+
+
+## Phase 3–4 MVP implementation notes
+
+- Workspace invitations are persisted with a seven-day expiry and can be revoked. Outbound email delivery and acceptance-token onboarding are not configured in this delivery.
+- Workspace role policy uses the existing OWNER, ADMIN and MEMBER roles. Only the owner can grant administrator privileges or change member roles; owners/admins manage invitations and the data model.
+- Dynamic records are stored in PostgreSQL JSONB and validated against typed resource fields. Relationship fields point to records in another resource within the same application.
+- The first records query implementation scans at most the 500 most recently updated records, then applies search/filter/sort/pagination. This is an explicit MVP ceiling; database-native JSONB querying and scalable cursor pagination remain hardening work before production-scale use.
+- File upload fields, external data-source adapters, custom role definitions, invitation acceptance and email delivery are not part of Phase 3–4.
