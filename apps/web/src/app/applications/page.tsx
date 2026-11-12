@@ -48,7 +48,18 @@ export default function ApplicationsPage() {
   }, [user, refreshSession, router]);
 
   useEffect(() => {
-    if (user && accessToken && tenant) void loadApplications();
+    if (!user || !accessToken || !tenant) return;
+
+    // Defer the request so its loading/error state updates happen outside the effect body.
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) return loadApplications();
+      return undefined;
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [user, accessToken, tenant, loadApplications]);
 
   async function createApplication(event: FormEvent<HTMLFormElement>) {
