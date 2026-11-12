@@ -263,3 +263,8 @@ footer span { color: var(--secondary); padding: 0 5px; }
 .application-modal-actions{display:flex;justify-content:flex-end;gap:10px;padding-top:18px;border-top:1px solid var(--border)}
 @media(max-width:850px){.application-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.applications-heading{align-items:flex-start;flex-direction:column}.application-card-grid{grid-template-columns:1fr}.applications-toolbar{align-items:flex-start;flex-direction:column}.application-modal{padding:21px}}
+
+/* Phase 3.2 — persisted application library */
+.application-error{margin:16px 0;padding:12px 14px;border:1px solid color-mix(in srgb,var(--error) 45%,var(--border));border-radius:10px;background:color-mix(in srgb,var(--error) 8%,var(--surface));color:var(--error);font-size:12px}
+.application-archive{align-self:flex-start;margin-top:10px;padding:4px 0;border:0;background:transparent;color:var(--muted);font-size:11px;text-decoration:underline;cursor:pointer}
+.application-archive:hover{color:var(--error)}
