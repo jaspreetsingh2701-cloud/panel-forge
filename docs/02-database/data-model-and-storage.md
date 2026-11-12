@@ -1,7 +1,7 @@
 ---
 title: PanelForge data model and storage
 status: Proposed
-version: 0.3
+version: 0.4
 last_updated: 2026-11-12
 owner: Project maintainers
 source_of_truth: true
@@ -188,17 +188,19 @@ Avoid storing passwords, access tokens, connector secrets or unnecessary persona
 
 ## 11. Initial implementation slice
 
-The first Prisma schema intentionally establishes only the identity and tenancy foundation:
+The first Prisma implementation established the identity and tenancy foundation. The Phase 2.1 schema extends it with local-password identity fields and persisted browser/device sessions:
 
 | Prisma model | PostgreSQL table | Purpose |
 |---|---|---|
-| `User` | `users` | Platform user identity, unique email and optional display name |
+| `User` | `users` | Platform identity, unique email, optional password hash and email-verification timestamp |
 | `Tenant` | `tenants` | Organisation/workspace with unique slug and lifecycle status |
-| `TenantMember` | `tenant_members` | User-to-tenant membership with status and unique tenant/user pair |
+| `TenantMember` | `tenant_members` | User-to-tenant membership, status and tenant-scoped role |
+| `AuthSession` | `auth_sessions` | Browser/device session with expiry and revocation state |
+| `RefreshToken` | `refresh_tokens` | Hashed refresh-token records supporting rotation and replay detection |
 
-The initial schema uses UUID primary keys, timestamp columns and relational foreign keys. Membership records reference both a user and tenant. Deleting a user or tenant cascades to its membership rows; audit history and published snapshots will use stricter retention rules when those models are introduced.
+The schema uses UUID primary keys, timestamp columns and relational foreign keys. Membership records reference both a user and tenant. Deleting a user or tenant cascades to its membership rows; audit history and published snapshots will use stricter retention rules when those models are introduced.
 
-The Prisma schema is the implementation source for these models. The initial migration is generated and reviewed as part of the database-foundation implementation; the broader logical model in this document remains a forward-looking design, not a claim that every listed entity already exists in the database.
+The initial migration created User, Tenant and TenantMember. The Phase 2.1 migration adds password/email-verification fields, tenant roles, AuthSession and RefreshToken. The schema has passed local Prisma format, validation, client generation and TypeScript checks; the migration has been applied successfully to local PostgreSQL and `prisma migrate status` reports the database is up to date. PR #10 is awaiting review/merge. The broader logical model remains forward-looking, not a claim that every listed entity exists in the database.
 
 ### Authentication model
 
@@ -206,9 +208,9 @@ The existing Prisma schema already establishes User, Tenant and TenantMember. Ph
 
 | Prisma model | Key fields | Notes |
 |---|---|---|
-| User | email, passwordHash, displayName, emailVerifiedAt | Normalized unique email; Argon2id password hash |
+| User | email, passwordHash, displayName, emailVerifiedAt | Normalized unique email; nullable Argon2id hash to permit future OIDC-only identities |
 | Tenant | name, slug, status | First tenant is created during registration |
-| TenantMember | tenantId, userId, role, status | Unique tenant/user pair; initial role is OWNER |
+| TenantMember | tenantId, userId, role, status | Unique tenant/user pair; registration explicitly assigns OWNER (schema default is MEMBER) |
 | AuthSession | userId, createdAt, expiresAt, revokedAt, lastUsedAt | One row per device/browser session |
 | RefreshToken | sessionId, tokenHash, expiresAt, consumedAt, revokedAt | Store hash only; retain consumed-token evidence for replay detection |
 
@@ -262,3 +264,4 @@ These options may be reconsidered when workload, compliance or customer isolatio
 | 0.1 | 2026-11-10 | Initial proposed logical data model and storage strategy |
 | 0.2 | 2026-11-10 | Record the initial Prisma identity and tenancy schema slice |
 | 0.3 | 2026-11-12 | Add custom authentication, tenant roles, session and refresh-token storage design |
+| 0.4 | 2026-11-12 | Record the implemented Phase 2.1 Prisma schema and successful local migration validation |
