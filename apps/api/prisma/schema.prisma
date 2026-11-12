@@ -26,7 +26,7 @@ enum TenantRole {
 }
 
 model User {
-  id          String         @id @default(uuid()) @db.Uuid
+  id              String         @id @default(uuid()) @db.Uuid
   email           String         @unique @db.VarChar(320)
   // Nullable so future OIDC-only identities can exist without a local password.
   // Local-password registration must always populate this with an Argon2id hash.
@@ -68,7 +68,6 @@ model TenantMember {
   @@index([userId])
   @@map("tenant_members")
 }
-
 
 model AuthSession {
   id         String         @id @default(uuid()) @db.Uuid
