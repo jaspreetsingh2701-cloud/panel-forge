@@ -10,7 +10,7 @@ source_of_truth: true
 
 ## Current milestone
 
-Phase 3 — Workspace and application foundation.
+Phase 3–4 — Workspace foundation and custom data engine (consolidated delivery PR in review).
 
 ## Completed phases
 
@@ -26,11 +26,11 @@ Phase 3 — Workspace and application foundation.
 | Batch | Status | Evidence |
 |---|---|---|
 | 3.1 Applications workspace UI | Complete | Applications library and create flow; PR #18 |
-| 3.2 Persisted applications and tenant-scoped API | In review | PostgreSQL model/migration, authenticated list/create/archive endpoints, persistent UI and tenant access tests; PR #19 |
-| 3.3 Workspace members and invitations | Pending | Members screen and invitation foundation |
-| 3.4 Platform RBAC and policy primitives | Pending | Roles and permission management with server-side enforcement |
+| 3.2 Persisted applications and tenant-scoped API | Included in consolidated PR | PostgreSQL persistence, authenticated tenant-scoped list/create/archive and UI |
+| 3.3 Workspace members and invitations | Included in consolidated PR | Members screen, invitation create/list/revoke and role management foundation |
+| 3.4 Platform RBAC and policy primitives | Included in consolidated PR | Owner-only role changes and manager-only invitation policies |
 
-## Upcoming product phases
+## Phase 4 — Custom data model and data engine\n\n| Batch | Status | Evidence |\n|---|---|---|\n| 4.1 Resource management | Included in consolidated PR | Application-scoped resources and resource creation UI |\n| 4.2 Custom field schema | Included in consolidated PR | Typed field definitions, options and relation targets |\n| 4.3 Schema validation | Included in consolidated PR | Server-side required/type/select/relation validation |\n| 4.4 Dynamic records CRUD | Included in consolidated PR | JSONB record create/read/update/delete and records UI |\n| 4.5 Filters, sorting, pagination and relationships | Included in consolidated PR | Search/filter/sort/page API and relation field validation |\n\n## Upcoming product phases
 
 - Phase 4 — Custom data model and data engine.
 - Phase 5 — Visual application builder.
