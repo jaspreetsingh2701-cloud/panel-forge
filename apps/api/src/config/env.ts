@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 import { z } from 'zod';
 
@@ -22,6 +21,20 @@ const environmentSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
+
+  // Secret used to sign and verify access JWTs.
+  // Require at least 32 bytes of entropy-bearing secret material.
+  JWT_ACCESS_SECRET: z
+    .string()
+    .refine(
+      (value) => Buffer.byteLength(value, 'utf8') >= 32,
+      'JWT_ACCESS_SECRET must be at least 32 bytes',
+    ),
+
+  // Keep access tokens short-lived to limit exposure if compromised.
+  JWT_ACCESS_TTL: z
+    .enum(['5m', '10m', '15m', '30m'])
+    .default('15m'),
 });
 
 // Validate process.env when this module is imported.
