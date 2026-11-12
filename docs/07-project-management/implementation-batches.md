@@ -17,19 +17,19 @@ Every product pull request delivers a coherent, reviewable vertical slice and in
 | Batch | Pull request scope | Visible outcome |
 |---|---|---|
 | 3.1 | Applications workspace UI and creation flow | Application library, empty state, create dialog and draft cards |
-| 3.2 | Persist applications in PostgreSQL; tenant-scoped API | In review — PR #19; applications survive reload with create/list/archive UI |
-| 3.3 | Workspace member management and invitations foundation | Members screen, role labels and invite flow foundation |
-| 3.4 | Platform RBAC and policy primitives | Roles and permission management screen with enforced API policies |
+| 3.2 | Persist applications in PostgreSQL; tenant-scoped API | Included in consolidated Phase 3–4 delivery PR |
+| 3.3 | Workspace member management and invitations foundation | Members screen, invitation management and revocation |
+| 3.4 | Platform RBAC and policy primitives | Owner-managed workspace roles; server-side manager/owner policies |
 
 ## Phase 4 — Custom data model and data engine
 
 | Batch | Pull request scope | Visible outcome |
 |---|---|---|
-| 4.1 | Resource management | Resources list and create-resource flow |
-| 4.2 | Custom field schema and field types | Drag-and-drop field editor for text, number, date, boolean, select and relation |
-| 4.3 | Schema validation and metadata APIs | Live field configuration validation and resource preview |
-| 4.4 | Dynamic records CRUD | Generated records table, create/edit record forms |
-| 4.5 | Filters, sorting, pagination and relationships | Interactive data grid and relationship selector |
+| 4.1 | Resource management | Application-scoped resources list and create-resource flow |
+| 4.2 | Custom field schema and field types | Field editor for text, number, date, boolean, select and relation |
+| 4.3 | Schema validation and metadata APIs | Server-side field validation and resource field metadata |
+| 4.4 | Dynamic records CRUD | JSONB-backed records table and create/edit/delete forms |
+| 4.5 | Filters, sorting, pagination and relationships | Search, sorting, pagination and validated relation fields |
 
 ## Phase 5 — Visual application builder
 
