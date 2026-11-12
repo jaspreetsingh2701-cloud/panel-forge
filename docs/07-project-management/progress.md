@@ -1,7 +1,7 @@
 ---
 title: PanelForge project progress
 status: Active
-version: 0.8
+version: 0.9
 last_updated: 2026-11-12
 source_of_truth: true
 ---
@@ -60,18 +60,18 @@ Documentation baseline merged into main. Product definition and MVP scope are ap
 - Local development, production builds and TypeScript checks verified.
 - API build configuration uses non-incremental TypeScript compilation to avoid the observed Nest watch output issue.
 
-**Batch 3 — Database and local infrastructure (in progress)**
+**Batch 3 — Database and local infrastructure (merged and locally validated)**
 - PostgreSQL 17 service through root Docker Compose.
 - Prisma ORM 7.10.1, PostgreSQL driver adapter and environment configuration.
 - Initial User, Tenant and TenantMember schema.
 - NestJS Prisma service/module and database-aware health endpoint.
-- Pending: local dependency installation, PostgreSQL startup, Prisma migration generation/application, runtime verification, lockfile update and PR review.
+- Local PostgreSQL startup, Prisma migration application and database-aware runtime verification completed.
 
 ## Progress
 
 **Phase 1: 100% complete.** Workspace, web/API skeletons, PostgreSQL/Prisma foundation, environment validation and API error conventions are merged.
 
-**Phase 2: approximately 10% implementation (provisional).** Phase 2.1 architecture documentation is merged. The identity/session Prisma schema and migration are on `feat/phase-2-auth-schema`; local Prisma validation and migration application are still pending. No authentication endpoints or services have been implemented yet.
+**Phase 2: approximately 15% implementation (provisional).** Phase 2.1 architecture documentation is merged. The identity/session Prisma schema and migration have passed local validation and have been applied to local PostgreSQL; PR #10 is awaiting review/merge. No authentication endpoints or services have been implemented yet.
 
 ## Phase 2.1 design and implementation status
 
@@ -83,12 +83,13 @@ Documentation baseline merged into main. Product definition and MVP scope are ap
 - [x] Review and merge the Phase 2.1 architecture documentation PR (#9).
 - [x] Extend Prisma schema with password, email-verification, tenant-role, session and refresh-token models.
 - [x] Add a reviewed-by-code migration SQL file for the identity/session schema.
-- [ ] Run Prisma format, validate, generate and migration status locally.
-- [ ] Apply the migration to local PostgreSQL and inspect the resulting schema.
+- [x] Run Prisma format, validate and generate Prisma Client locally.
+- [x] Apply the migration to local PostgreSQL and verify migration status.
+- [x] Run the API TypeScript typecheck successfully.
 
 ## Next milestone
 
-Validate and apply the Phase 2.1 Prisma migration locally, review the resulting database schema, then merge the schema PR before starting authentication services.
+Review and merge PR #10 after confirming its final diff and checks. Then begin Phase 2.2: implement the NestJS authentication module and registration flow.
 
 ## Learning backlog
 
