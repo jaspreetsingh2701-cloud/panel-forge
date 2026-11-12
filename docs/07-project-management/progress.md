@@ -1,7 +1,7 @@
 ---
 title: PanelForge project progress
 status: Active
-version: 0.7
+version: 0.8
 last_updated: 2026-11-12
 source_of_truth: true
 ---
@@ -71,23 +71,24 @@ Documentation baseline merged into main. Product definition and MVP scope are ap
 
 **Phase 1: 100% complete.** Workspace, web/API skeletons, PostgreSQL/Prisma foundation, environment validation and API error conventions are merged.
 
-**Phase 2: 0% implementation.** Phase 2.1 architecture documentation is being prepared in a documentation PR. No authentication code or schema migration has been implemented yet.
+**Phase 2: approximately 10% implementation (provisional).** Phase 2.1 architecture documentation is merged. The identity/session Prisma schema and migration are on `feat/phase-2-auth-schema`; local Prisma validation and migration application are still pending. No authentication endpoints or services have been implemented yet.
 
-## Phase 2.1 design decisions
+## Phase 2.1 design and implementation status
 
 - [x] Custom NestJS email/password authentication selected for the MVP.
 - [x] First registration creates User + Tenant + OWNER membership.
 - [x] Google sign-in deferred until after the baseline flow works.
 - [x] Next.js same-origin proxy selected for browser-to-NestJS traffic.
 - [x] Document rationale, alternatives and trade-offs in ADR-007 and ADR-008.
-- [ ] Review and merge the Phase 2.1 documentation PR.
-- [ ] Extend Prisma schema with password, role, session and refresh-token models.
-- [ ] Generate and review database migration.
-- [ ] Validate schema and migration locally.
+- [x] Review and merge the Phase 2.1 architecture documentation PR (#9).
+- [x] Extend Prisma schema with password, email-verification, tenant-role, session and refresh-token models.
+- [x] Add a reviewed-by-code migration SQL file for the identity/session schema.
+- [ ] Run Prisma format, validate, generate and migration status locally.
+- [ ] Apply the migration to local PostgreSQL and inspect the resulting schema.
 
 ## Next milestone
 
-Complete Phase 2.1 documentation review, then implement and validate the Prisma identity/session schema before starting authentication services.
+Validate and apply the Phase 2.1 Prisma migration locally, review the resulting database schema, then merge the schema PR before starting authentication services.
 
 ## Learning backlog
 
