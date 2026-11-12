@@ -65,7 +65,7 @@ export default function AppDashboardPage() {
           <a className="sidebar-link sidebar-link--disabled" href="#data-sources">
             <span>⌘</span> Data sources <Badge>Coming soon</Badge>
           </a>
-          <a className="sidebar-link sidebar-link--disabled" href="#members">
+          <a className="sidebar-link" href="/members">
             <span>♧</span> Members <Badge>Coming soon</Badge>
           </a>
         </nav>
