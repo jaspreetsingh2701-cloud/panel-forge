@@ -1,7 +1,7 @@
 ---
 title: PanelForge project progress
 status: Active
-version: 1.0
+version: 1.1
 last_updated: 2026-11-13
 source_of_truth: true
 ---
@@ -10,7 +10,7 @@ source_of_truth: true
 
 ## Current milestone
 
-Phase 2.5 — Engineering quality foundation.
+Phase 3 — Workspace and application foundation.
 
 ## Completed phases
 
@@ -18,39 +18,31 @@ Phase 2.5 — Engineering quality foundation.
 |---|---|---|
 | Phase 0 — Architecture and documentation baseline | Complete | Documentation baseline merged |
 | Phase 1 — Monorepo and infrastructure | Complete | Workspace, Next.js, NestJS, PostgreSQL/Prisma and API foundations merged |
-| Phase 2 — Identity, tenancy and first vertical slice | Complete for the current authentication/workspace slice | Custom authentication, tenant membership, refresh sessions, same-origin proxy and starter workspace UI merged; PRs #10–#14 |
+| Phase 2 — Identity and tenancy foundation | Complete | Custom authentication, tenant membership, refresh sessions, same-origin proxy and workspace UI; PRs #10–#14 |
+| Phase 2.5 — Engineering quality foundation | Complete for merged baseline | CI, lint/formatting, tests/security and release workflow foundations; PRs #15–#17. Staging deployment intentionally deferred. |
 
-Phase 2's broader application/resource tenancy operations remain part of the upcoming metadata and application-management implementation; completion here refers to the identity, tenant membership and authenticated workspace foundation.
+## Phase 3 — Workspace and application foundation
 
-## Phase 2.5 status
-
-| Batch | Status | Notes |
+| Batch | Status | Evidence |
 |---|---|---|
-| 2.5.1 CI baseline | Complete | PR #15 merged; GitHub Actions runs frozen-lockfile install, API/web typecheck and builds |
-| 2.5.2 Lint, formatting and commit hooks | In progress | ESLint, Prettier enforcement, Husky, lint-staged, Commitlint and Changesets |
-| 2.5.3 Unit/component/integration tests | Pending | Jest, React Testing Library, PostgreSQL integration setup and coverage |
-| 2.5.4 E2E, API contract and security scans | Pending | Playwright, Swagger/OpenAPI and security scanning |
-| 2.5.5 Staging and release workflow | Pending | Protected staging, smoke tests and rollback checklist |
+| 3.1 Applications workspace UI | Complete | Applications library and create flow; PR #18 |
+| 3.2 Persisted applications and tenant-scoped API | In review | PostgreSQL model/migration, authenticated list/create/archive endpoints, persistent UI and tenant access tests; PR #19 |
+| 3.3 Workspace members and invitations | Pending | Members screen and invitation foundation |
+| 3.4 Platform RBAC and policy primitives | Pending | Roles and permission management with server-side enforcement |
 
-See the Phase 2.5 engineering quality plan for batch scope and exit criteria.
+## Upcoming product phases
 
-## Next milestone
+- Phase 4 — Custom data model and data engine.
+- Phase 5 — Visual application builder.
+- Phase 6 — Runtime and data binding.
+- Phase 7 — Application permissions, publishing and rollback.
+- Phase 8 — MVP hardening, accessibility, security, performance, observability and production readiness.
 
-Complete Phase 2.5 in order. Begin Phase 3 — metadata and dynamic records — only after its engineering quality exit criteria are met.
-
-## Product roadmap
-
-- Phase 3 — Resources, typed fields, schema versions, JSONB records, dynamic CRUD and typed query grammar.
-- Phase 4 — Visual builder.
-- Phase 5 — Data-source adapters.
-- Phase 6 — Dynamic RBAC.
-- Phase 7 — Page builder and dashboards.
-- Phase 8 — Actions, publishing and audit.
-- Phase 9 — Production hardening.
+Deployment remains deferred until Phase 8.4 and the product MVP is complete.
 
 ## Working agreements
 
-- Keep changes in short-lived feature branches and reviewable pull requests.
-- Do not merge a PR until local validation and required CI checks pass.
+- Deliver coherent vertical slices; every product PR includes a visible UI workflow.
+- Do not merge a PR until required CI checks pass and changed behaviour is reviewed.
+- Enforce tenant ownership and permission checks server-side; never trust a client-supplied tenant identifier without membership verification.
 - Never commit secrets or production customer data.
-- Every tenant/data/permission change must consider negative security tests.
