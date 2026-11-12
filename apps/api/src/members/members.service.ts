@@ -10,7 +10,7 @@ export class MembersService {
  }
  private async manager(userId:string,tenantId:string,ownerOnly=false){
   const m=await this.prisma.tenantMember.findFirst({where:{userId,tenantId,status:'ACTIVE',tenant:{status:'ACTIVE'}},select:{role:true}});
-  if(!m||!(ownerOnly?m.role==='OWNER':['OWNER','ADMIN'].includes(m.role))) throw new ForbiddenException(ownerOnly?'Only the workspace owner can change member roles.':'Only workspace owners and admins can manage invitations.');
+  if(!m||!(ownerOnly?m.role==='OWNER':['OWNER','ADMIN'].includes(m.role))) throw new ForbiddenException(ownerOnly?'Only the workspace owner can assign administrator privileges or change member roles.':'Only workspace owners and admins can manage invitations.');
  }
  async listMembers(userId:string,tenantId:string){
   await this.memberAccess(userId,tenantId);
@@ -29,7 +29,7 @@ export class MembersService {
   return this.prisma.workspaceInvitation.findMany({where:{tenantId,status:'PENDING',expiresAt:{gt:new Date()}},orderBy:{createdAt:'desc'},select:{id:true,email:true,role:true,status:true,expiresAt:true,createdAt:true}});
  }
  async createInvitation(userId:string,tenantId:string,dto:CreateInvitationDto){
-  await this.manager(userId,tenantId);
+  await this.manager(userId,tenantId,dto.role==='ADMIN');
   const email=dto.email.trim().toLowerCase();
   const member=await this.prisma.tenantMember.findFirst({where:{tenantId,status:'ACTIVE',user:{email}},select:{id:true}});
   if(member) throw new ConflictException('This person is already a workspace member.');
