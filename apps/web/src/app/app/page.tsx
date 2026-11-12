@@ -59,9 +59,9 @@ export default function AppDashboardPage() {
           <a className="sidebar-link sidebar-link--active" href="/app">
             <span>▦</span> Overview
           </a>
-          <a className="sidebar-link sidebar-link--disabled" href="#applications">
-            <span>◫</span> Applications <Badge>Coming soon</Badge>
-          </a>
+          <Link className="sidebar-link" href="/applications">
+            <span>◫</span> Applications
+          </Link>
           <a className="sidebar-link sidebar-link--disabled" href="#data-sources">
             <span>⌘</span> Data sources <Badge>Coming soon</Badge>
           </a>
@@ -138,10 +138,10 @@ export default function AppDashboardPage() {
               Connect a data source, shape your resources and create an admin experience that fits
               the way your team works.
             </p>
-            <Button size="lg" disabled>
-              Create your first application <span aria-hidden="true">→</span>
-            </Button>
-            <small>Application builder is coming in the next milestone.</small>
+            <Link className="pf-button pf-button--primary" href="/applications">
+              Explore applications <span aria-hidden="true">→</span>
+            </Link>
+            <small>Start by creating an application in your workspace.</small>
           </section>
           <footer className="dashboard-footer">
             PanelForge <span>·</span> Building the foundation, one layer at a time.
