@@ -35,8 +35,8 @@ model User {
   emailVerifiedAt DateTime?      @map("email_verified_at") @db.Timestamptz(6)
   memberships     TenantMember[]
   sessions        AuthSession[]
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("users")
 }
@@ -70,17 +70,17 @@ model TenantMember {
 }
 
 model AuthSession {
-  id         String         @id @default(uuid()) @db.Uuid
-  userId     String         @map("user_id") @db.Uuid
-  userAgent  String?        @map("user_agent") @db.VarChar(512)
-  ipAddress  String?        @map("ip_address") @db.VarChar(45)
-  lastUsedAt DateTime?      @map("last_used_at") @db.Timestamptz(6)
-  expiresAt  DateTime       @map("expires_at") @db.Timestamptz(6)
-  revokedAt  DateTime?      @map("revoked_at") @db.Timestamptz(6)
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String         @map("user_id") @db.Uuid
+  userAgent     String?        @map("user_agent") @db.VarChar(512)
+  ipAddress     String?        @map("ip_address") @db.VarChar(45)
+  lastUsedAt    DateTime?      @map("last_used_at") @db.Timestamptz(6)
+  expiresAt     DateTime       @map("expires_at") @db.Timestamptz(6)
+  revokedAt     DateTime?      @map("revoked_at") @db.Timestamptz(6)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshTokens RefreshToken[]
-  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@index([userId, revokedAt])
   @@index([expiresAt])
@@ -88,18 +88,18 @@ model AuthSession {
 }
 
 model RefreshToken {
-  id                String        @id @default(uuid()) @db.Uuid
-  sessionId         String        @map("session_id") @db.Uuid
+  id               String        @id @default(uuid()) @db.Uuid
+  sessionId        String        @map("session_id") @db.Uuid
   // SHA-256 hex digest only; never persist the raw refresh-token secret.
-  tokenHash         String        @unique @map("token_hash") @db.Char(64)
-  expiresAt         DateTime      @map("expires_at") @db.Timestamptz(6)
-  consumedAt        DateTime?     @map("consumed_at") @db.Timestamptz(6)
-  revokedAt         DateTime?     @map("revoked_at") @db.Timestamptz(6)
-  rotatedToTokenId  String?       @unique @map("rotated_to_token_id") @db.Uuid
-  session           AuthSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  rotatedTo         RefreshToken? @relation("RefreshTokenRotation", fields: [rotatedToTokenId], references: [id], onDelete: SetNull)
-  rotatedFrom       RefreshToken? @relation("RefreshTokenRotation")
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  tokenHash        String        @unique @map("token_hash") @db.Char(64)
+  expiresAt        DateTime      @map("expires_at") @db.Timestamptz(6)
+  consumedAt       DateTime?     @map("consumed_at") @db.Timestamptz(6)
+  revokedAt        DateTime?     @map("revoked_at") @db.Timestamptz(6)
+  rotatedToTokenId String?       @unique @map("rotated_to_token_id") @db.Uuid
+  session          AuthSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  rotatedTo        RefreshToken? @relation("RefreshTokenRotation", fields: [rotatedToTokenId], references: [id], onDelete: SetNull)
+  rotatedFrom      RefreshToken? @relation("RefreshTokenRotation")
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([sessionId, expiresAt])
   @@index([consumedAt])
