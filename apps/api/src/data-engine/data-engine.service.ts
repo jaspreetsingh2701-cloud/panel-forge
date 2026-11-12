@@ -98,7 +98,9 @@ export class DataEngineService {
   const sortBy=query.sortBy??'updatedAt',sortOrder=query.sortOrder==='asc'?'asc':'desc';
   const fields=resource.fields as Field[];
   if(sortBy!=='createdAt'&&sortBy!=='updatedAt'&&!fields.some(f=>f.key===sortBy)) throw new BadRequestException('Invalid sort field.');
-  let filter:Record<string,string>={};\n  if(query.filter){try{const parsed:unknown=JSON.parse(query.filter);if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error();filter=parsed as Record<string,string>;}catch{throw new BadRequestException('Filter must be a JSON object.');}}\n  if(Object.entries(filter).some(([key,value])=>!fields.some(f=>f.key===key)||typeof value!=='string'))throw new BadRequestException('Filter contains an invalid field or value.');
+  let filter:Record<string,string>={};
+  if(query.filter){try{const parsed:unknown=JSON.parse(query.filter);if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error();filter=parsed as Record<string,string>;}catch{throw new BadRequestException('Filter must be a JSON object.');}}
+  if(Object.entries(filter).some(([key,value])=>!fields.some(f=>f.key===key)||typeof value!=='string'))throw new BadRequestException('Filter contains an invalid field or value.');
   const rows=await this.prisma.dynamicRecord.findMany({where:{resourceId},orderBy:{updatedAt:'desc'},take:500});
   const q=(query.q??'').trim().toLowerCase();
   const filtered=rows.filter(row=>{
