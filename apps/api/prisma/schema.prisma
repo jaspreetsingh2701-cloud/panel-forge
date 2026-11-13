@@ -85,7 +85,8 @@ model Application {
   status      ApplicationStatus @default(DRAFT)
   tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   resources   Resource[]
-  pageConfig  Json?             @map("page_config") @db.JsonB
+  pageConfig    Json?             @map("page_config") @db.JsonB
+  builderVersion Int              @default(0) @map("builder_version")
   createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 
