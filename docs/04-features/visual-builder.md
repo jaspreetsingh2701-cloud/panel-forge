@@ -84,7 +84,7 @@ The canvas is not a freeform layout engine. Phase 4.1 provides the editor shell;
 
 - `GET /api/v1/tenants/:tenantId/applications/:applicationId/builder` returns `components` and the current `version` token.
 - `PUT /api/v1/tenants/:tenantId/applications/:applicationId/builder` accepts `expectedVersion` and `components`, and returns the saved configuration with its incremented `version` token.
-- A stale `expectedUpdatedAt` returns HTTP 409. The client must not silently retry with a newer token.
+- A stale `expectedVersion` returns HTTP 409. The client must not silently retry with a newer token.
 
 ### Acceptance criteria
 
