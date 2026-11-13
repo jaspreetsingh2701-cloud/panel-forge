@@ -46,12 +46,12 @@ export class ApplicationsService {
     await this.assertTenantAccess(userId, tenantId);
     const application = await this.prisma.application.findFirst({
       where: { id: applicationId, tenantId, status: 'DRAFT' },
-      select: { pageConfig: true, updatedAt: true },
+      select: { pageConfig: true, builderVersion: true },
     });
     if (!application) throw new NotFoundException('Application not found.');
     return {
       components: application.pageConfig ?? [],
-      updatedAt: application.updatedAt,
+      version: application.builderVersion,
     };
   }
 
@@ -73,9 +73,9 @@ export class ApplicationsService {
         id: applicationId,
         tenantId,
         status: 'DRAFT',
-        updatedAt: new Date(dto.expectedUpdatedAt),
+        builderVersion: dto.expectedVersion,
       },
-      data: { pageConfig: dto.components as never },
+      data: { pageConfig: dto.components as never, builderVersion: { increment: 1 } },
     });
     if (result.count !== 1) {
       throw new ConflictException('This application changed after you opened the builder. Reload the saved version before saving again.');
@@ -83,10 +83,10 @@ export class ApplicationsService {
 
     const saved = await this.prisma.application.findFirst({
       where: { id: applicationId, tenantId, status: 'DRAFT' },
-      select: { pageConfig: true, updatedAt: true },
+      select: { pageConfig: true, builderVersion: true },
     });
     if (!saved) throw new NotFoundException('Application not found.');
-    return { components: saved.pageConfig ?? [], updatedAt: saved.updatedAt };
+    return { components: saved.pageConfig ?? [], version: saved.builderVersion };
   }
 
   async archive(userId: string, tenantId: string, applicationId: string) {
