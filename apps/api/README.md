@@ -50,44 +50,73 @@ The example file contains local-only credentials; do not use them outside local 
 
 ## Run the API
 
-Start the full workspace from the repository root:
+From the repository root, run the API in its own terminal:
 
-```powershell
-pnpm dev
+```bash
+pnpm --filter @panelforge/api dev
 ```
 
-The API health endpoint is available at:
+The web application runs separately:
 
-`http://localhost:4000/api/v1/health`
+```bash
+pnpm --filter @panelforge/web dev
+```
 
-A successful response includes the PostgreSQL dependency status. The API connects to PostgreSQL during startup, so start the database before starting the API.
+Or start all configured development apps together with `pnpm dev`.
 
-## Database commands
+The API health endpoint is available at [http://localhost:4000/api/v1/health](http://localhost:4000/api/v1/health). Development Swagger documentation is available at [http://localhost:4000/api/v1/docs](http://localhost:4000/api/v1/docs).
+
+The API connects to PostgreSQL during startup, so start the database before starting the API.
+
+## API commands
 
 Run from the repository root:
 
 | Command | Purpose |
 |---|---|
-| `docker compose up -d postgres` | Start local PostgreSQL |
-| `docker compose stop postgres` | Stop PostgreSQL without deleting data |
-| `docker compose down` | Remove the container/network; keep the named volume |
-| `pnpm --filter @panelforge/api db:generate` | Generate Prisma Client |
-| `pnpm --filter @panelforge/api db:migrate --name <name>` | Create and apply a development migration |
+| `pnpm --filter @panelforge/api dev` | Start NestJS in watch mode |
+| `pnpm --filter @panelforge/api build` | Build the API |
+| `pnpm --filter @panelforge/api start` | Run the compiled API |
+| `pnpm --filter @panelforge/api typecheck` | Run API TypeScript checks |
+| `pnpm --filter @panelforge/api lint` | Not configured; use root `pnpm lint` |
+| `pnpm --filter @panelforge/api test` | Run API unit tests |
+| `pnpm --filter @panelforge/api test:integration` | Run API integration tests |
+| `pnpm --filter @panelforge/api test:coverage` | Run API tests with coverage |
+| `pnpm --filter @panelforge/api db:generate` | Regenerate Prisma Client |
+| `pnpm --filter @panelforge/api db:status` | Check applied/pending migrations |
+| `pnpm --filter @panelforge/api db:migrate --name add_applications` | Create and apply a development migration |
 | `pnpm --filter @panelforge/api db:deploy` | Apply committed migrations |
-| `pnpm --filter @panelforge/api db:status` | Show migration status |
 | `pnpm --filter @panelforge/api db:studio` | Open Prisma Studio |
 
-**Warning:** `docker compose down -v` deletes the local PostgreSQL volume and all data stored in it. Use it only when you intentionally want to reset the local database.
+**Migration workflow**
 
-## Initial schema
+1. Edit `apps/api/prisma/schema.prisma`.
+2. Create a named migration during development, for example:
 
-The first migration establishes only the platform identity and tenancy foundation:
+   ```bash
+   pnpm --filter @panelforge/api db:migrate --name add_applications
+   ```
 
-- `User`
-- `Tenant`
-- `TenantMember`
+3. Commit the updated Prisma schema and generated migration directory.
+4. On another local database or deployment environment, check and apply committed migrations:
 
-Applications, resources, dynamic records, permissions and publishing models will be added in their respective implementation phases.
+   ```bash
+   pnpm --filter @panelforge/api db:status
+   pnpm --filter @panelforge/api db:deploy
+   ```
+
+Use `db:migrate` to create a migration during development; use `db:deploy` to apply migrations that already exist. Do not edit generated migration SQL after it has been applied to a shared environment.
+
+## Debugging API errors
+
+Every API error response includes an `error.requestId` and the response header `X-Request-Id`. For unexpected server errors, search the API terminal output for that ID. The structured JSON log includes:
+
+- `timestamp`, `level`, `event`
+- `requestId`, `method`, `path`, `statusCode`
+- `error.name`, `error.message`, `error.stacktrace`
+- Prisma `error.code` and `error.clientVersion` when available
+
+The browser receives a safe error message and request ID, not the internal stack trace. Query parameters, cookies and authorization headers are intentionally excluded from the request log.
 
 ## Environment variables
 
