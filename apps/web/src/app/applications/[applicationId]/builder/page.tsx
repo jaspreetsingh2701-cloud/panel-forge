@@ -25,6 +25,12 @@ export default function BuilderPage() {
   const [isLoadingApplication, setIsLoadingApplication] = useState(true);
   const [error, setError] = useState('');
   const [components, setComponents] = useState<BuilderComponent[]>([]);
+  const [savedComponents, setSavedComponents] = useState<BuilderComponent[]>([]);
+  const [builderUpdatedAt, setBuilderUpdatedAt] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saveConflict, setSaveConflict] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [interactionMessage, setInteractionMessage] = useState('');
@@ -48,7 +54,22 @@ export default function BuilderPage() {
         const applications = await response.json() as Application[];
         const current = applications.find((item) => item.id === applicationId);
         if (!current) throw new Error('Application not found in this workspace.');
-        if (!cancelled) { setApplication(current); setError(''); }
+        const builderResponse = await fetch('/api/v1/tenants/' + tenant.id + '/applications/' + applicationId + '/builder', {
+          headers: { Authorization: 'Bearer ' + accessToken }, credentials: 'include', cache: 'no-store',
+        });
+        if (!builderResponse.ok) {
+          const payload = await builderResponse.json().catch(() => null) as { message?: string | string[] } | null;
+          throw new Error(Array.isArray(payload?.message) ? payload.message.join(' ') : payload?.message || 'Could not restore the saved builder configuration.');
+        }
+        const builderConfig = await builderResponse.json() as { components: BuilderComponent[]; updatedAt: string };
+        const restoredComponents = Array.isArray(builderConfig.components) ? builderConfig.components : [];
+        if (!cancelled) {
+          setApplication(current);
+          setComponents(restoredComponents);
+          setSavedComponents(restoredComponents);
+          setBuilderUpdatedAt(builderConfig.updatedAt);
+          setError('');
+        }
       } catch (loadError) {
         if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'Could not load this application.');
       } finally {
@@ -59,9 +80,55 @@ export default function BuilderPage() {
     return () => { cancelled = true; };
   }, [user, tenant, accessToken, applicationId]);
 
+  const hasUnsavedChanges = JSON.stringify(components) !== JSON.stringify(savedComponents);
+  const canSave = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
   const selectedComponent = components.find((component) => component.id === selectedId) ?? null;
   const selectedDefinition = selectedComponent ? getBuilderComponentDefinition(selectedComponent.type) : undefined;
   const selectedIndex = selectedId ? components.findIndex((component) => component.id === selectedId) : -1;
+
+  async function saveConfiguration() {
+    if (!tenant || !accessToken || !builderUpdatedAt || !canSave || !hasUnsavedChanges || isSaving) return;
+    setIsSaving(true);
+    setSaveError('');
+    setSaveConflict(false);
+    setSaveMessage('');
+    try {
+      const response = await fetch('/api/v1/tenants/' + tenant.id + '/applications/' + applicationId + '/builder', {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ expectedUpdatedAt: builderUpdatedAt, components }),
+      });
+      const payload = await response.json().catch(() => null) as { message?: string | string[]; components?: BuilderComponent[]; updatedAt?: string } | null;
+      if (!response.ok) {
+        const message = Array.isArray(payload?.message) ? payload.message.join(' ') : payload?.message || 'Could not save the builder configuration.';
+        if (response.status === 409) setSaveConflict(true);
+        throw new Error(message);
+      }
+      if (!payload || !Array.isArray(payload.components) || !payload.updatedAt) {
+        throw new Error('The server returned an invalid save response. Reload the builder before continuing.');
+      }
+      setComponents(payload.components);
+      setSavedComponents(payload.components);
+      setBuilderUpdatedAt(payload.updatedAt);
+      setSaveMessage('All changes saved.');
+      setInteractionMessage('Builder configuration saved.');
+    } catch (saveError) {
+      setSaveError(saveError instanceof Error ? saveError.message : 'Could not save the builder configuration.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [hasUnsavedChanges]);
 
   function addComponent(type: BuilderComponentType) {
     const component = createBuilderComponent(type, crypto.randomUUID());
@@ -113,7 +180,11 @@ export default function BuilderPage() {
     <main className="builder-page">
       <header className="builder-topbar">
         <div className="builder-topbar-title"><Link className="brand" href="/applications"><span className="brand-mark">P</span><span>PanelForge</span></Link><span className="builder-topbar-divider">/</span><Link className="breadcrumb-muted" href={'/applications/' + applicationId + '/resources'}>{application.name}</Link><span className="builder-topbar-divider">/</span><strong>Builder</strong></div>
-        <div className="builder-topbar-actions"><span className="pf-badge pf-badge--warning">Draft · local preview</span><ThemeToggle /></div>
+        <div className="builder-topbar-actions">
+          <span className={'pf-badge ' + (hasUnsavedChanges ? 'pf-badge--warning' : 'pf-badge--success')}>{hasUnsavedChanges ? 'Unsaved changes' : 'Saved draft'}</span>
+          <button className="pf-button pf-button--primary pf-button--sm" type="button" onClick={() => void saveConfiguration()} disabled={!canSave || !hasUnsavedChanges || isSaving || !builderUpdatedAt}>{isSaving ? 'Saving…' : 'Save changes'}</button>
+          <ThemeToggle />
+        </div>
       </header>
       {error && <p className="application-error builder-error" role="alert">{error}</p>}
       <div className="builder-workspace">
@@ -147,7 +218,10 @@ export default function BuilderPage() {
               </article>)}
             </div>}
           </div>
-          <p className="builder-canvas-footnote">Reorder with the arrow controls or drag handle. Changes remain in this local preview and are not saved.</p>
+          <p className="builder-canvas-footnote">Reorder with the arrow controls or drag handle. Changes are saved to this application's draft configuration; publishing is not available yet.</p>
+          {saveError && <p className="application-error builder-error" role="alert">{saveError} {saveConflict && <button className="pf-button pf-button--ghost pf-button--sm" type="button" onClick={() => window.location.reload()}>Reload saved version</button>}</p>}
+          {saveMessage && <p className="builder-save-message" role="status">{saveMessage}</p>}
+          {!canSave && hasUnsavedChanges && <p className="builder-save-message" role="status">Only workspace owners and admins can save application changes.</p>}
           <p className="builder-interaction-status" role="status" aria-live="polite">{interactionMessage}</p>
         </section>
         <aside className="builder-panel builder-inspector" aria-label="Component properties">
