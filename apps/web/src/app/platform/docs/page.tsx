@@ -53,7 +53,7 @@ export default function PlatformDocumentationPage() {
   useEffect(() => {
     if (!user) { void refreshSession().then((ok) => { if (!ok) router.replace('/login'); }); return; }
     if (user.platformRole !== 'SUPER_ADMIN') return;
-    if (accessToken) void loadEntries(accessToken).catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unable to load documentation.')).finally(() => setLoading(false));
+    if (accessToken) void Promise.resolve().then(() => loadEntries(accessToken)).catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unable to load documentation.')).finally(() => setLoading(false));
   }, [user, accessToken, refreshSession, router, loadEntries]);
 
   const filtered = useMemo(() => entries.filter((entry) => (entry.title + ' ' + entry.path + ' ' + entry.category).toLowerCase().includes(search.toLowerCase())), [entries, search]);
