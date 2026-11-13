@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useAuth } from '@/components/auth/auth-provider';
-import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, moveBuilderComponent, type BuilderComponent, type BuilderComponentType, type BuilderPropertyKey } from '@/features/builder/component-registry';
+import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, moveBuilderComponent, type BuilderComponent, type BuilderComponentType, type BuilderPropertyKey, type BuilderLayoutWidth, type BuilderLayoutSpacing } from '@/features/builder/component-registry';
 type Application = { id: string; name: string; description: string | null; status: 'DRAFT' | 'ARCHIVED' };
 const categories = Array.from(new Set(COMPONENT_REGISTRY.map((definition) => definition.category)));
 
@@ -69,6 +69,10 @@ export default function BuilderPage() {
     setSelectedId(component.id);
     setInteractionMessage(component.title + ' added to canvas.');
   }
+  function updateLayout(key: 'width' | 'spacing', value: BuilderLayoutWidth | BuilderLayoutSpacing) {
+    if (!selectedComponent) return;
+    setComponents((current) => current.map((component) => component.id === selectedComponent.id ? { ...component, layout: { ...component.layout, [key]: value } } : component));
+  }
   function updateSelected(key: BuilderPropertyKey, value: string) {
     if (!selectedComponent) return;
     setComponents((current) => current.map((component) => component.id === selectedComponent.id ? { ...component, [key]: value } : component));
@@ -119,7 +123,7 @@ export default function BuilderPage() {
           <div className="builder-canvas-board">
             {components.length === 0 ? <div className="builder-canvas-empty"><span className="builder-empty-icon">＋</span><h2>Your canvas is ready.</h2><p>Add a component from the left panel to start shaping this page.</p></div> : <div className="builder-canvas-components">
               {components.map((component, index) => <article
-                className={(component.id === selectedId ? 'builder-canvas-node builder-canvas-node--selected' : 'builder-canvas-node') + (component.id === draggedId ? ' builder-canvas-node--dragging' : '')}
+                className={'builder-canvas-node builder-canvas-node--width-' + component.layout.width + ' builder-canvas-node--spacing-' + component.layout.spacing + (component.id === selectedId ? ' builder-canvas-node--selected' : '') + (component.id === draggedId ? ' builder-canvas-node--dragging' : '')}
                 key={component.id}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={() => handleDrop(index)}
@@ -145,6 +149,12 @@ export default function BuilderPage() {
           {!selectedComponent || !selectedDefinition ? <div className="builder-inspector-empty"><span>◇</span><p>No component selected</p><small>Choose a component on the canvas to inspect its properties.</small></div> : <>
             <div className="builder-inspector-type"><span className="builder-component-icon">{selectedDefinition.icon}</span><span><strong>{selectedDefinition.label}</strong><small>{selectedDefinition.type}</small></span></div>
             {selectedDefinition.properties.map((property) => <label className="pf-field builder-property-field" key={property.key}><span className="pf-label">{property.label}</span>{property.control === 'textarea' ? <textarea className="pf-input builder-property-textarea" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} /> : <input className="pf-input" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} />}</label>)}
+            <div className="builder-layout-controls">
+              <p className="eyebrow">LAYOUT</p>
+              <label className="pf-field builder-property-field"><span className="pf-label">Column width</span><select className="pf-input" value={selectedComponent.layout.width} onChange={(event) => updateLayout('width', event.target.value as BuilderLayoutWidth)}><option value="full">Full width</option><option value="half">Half width</option><option value="third">One third</option></select></label>
+              <label className="pf-field builder-property-field"><span className="pf-label">Content spacing</span><select className="pf-input" value={selectedComponent.layout.spacing} onChange={(event) => updateLayout('spacing', event.target.value as BuilderLayoutSpacing)}><option value="compact">Compact</option><option value="comfortable">Comfortable</option><option value="spacious">Spacious</option></select></label>
+              <small className="builder-layout-help">Columns automatically stack on smaller screens.</small>
+            </div>
             <button className="pf-button pf-button--danger builder-remove-button" type="button" onClick={removeSelected}>Remove component</button>
           </>}
         </aside>
