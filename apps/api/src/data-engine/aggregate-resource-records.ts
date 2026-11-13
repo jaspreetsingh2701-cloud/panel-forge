@@ -17,7 +17,7 @@ export function aggregateResourceRecords(
   if (operation !== 'count' && (!numericField || numericField.type !== 'NUMBER')) {
     throw new Error('Choose a numeric resource field for this aggregation.');
   }
-  if (groupBy && groupBy !== 'createdAt' && !fields.some((item) => item.key === groupBy)) {
+  if (groupBy && !fields.some((item) => item.key === groupBy)) {
     throw new Error('Choose a valid field for chart grouping.');
   }
 
@@ -37,7 +37,7 @@ export function aggregateResourceRecords(
   const grouped = new Map<string, number[]>();
   if (groupBy) {
     for (const record of records) {
-      const raw = groupBy === 'createdAt' ? undefined : record.data[groupBy];
+      const raw = record.data[groupBy];
       const label = String(raw ?? 'Unspecified');
       const current = grouped.get(label) ?? [];
       if (operation === 'count') current.push(1);
