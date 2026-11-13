@@ -6,7 +6,7 @@ export type BuilderLayout = { width: BuilderLayoutWidth; spacing: BuilderLayoutS
 export type BuilderComponent = { id: string; type: BuilderComponentType; title: string; description: string; content: string; layout: BuilderLayout };
 export type BuilderComponentDefinition = {
   type: BuilderComponentType; label: string; category: 'Content' | 'Data'; description: string; icon: string;
-  defaults: Omit<BuilderComponent, 'id' | 'type'>;
+  defaults: Omit<BuilderComponent, 'id' | 'type' | 'layout'>;
   properties: ReadonlyArray<{ key: BuilderPropertyKey; label: string; control: 'input' | 'textarea' }>;
 };
 export const COMPONENT_REGISTRY = [
