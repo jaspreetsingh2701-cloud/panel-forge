@@ -10,7 +10,7 @@ describe('builder component registry', () => {
   it('creates a component from registered defaults and a stable id', () => {
     expect(createBuilderComponent('metric', 'component-1')).toEqual({
       id: 'component-1', type: 'metric', title: 'Total orders',
-      description: 'Example metric · data binding comes next', content: '128',
+      description: 'Live metric from a connected resource', content: '128',
       layout: { width: 'full', spacing: 'comfortable' },
     });
   });
