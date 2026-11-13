@@ -1,7 +1,9 @@
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
+  ArrayUnique,
   IsArray,
+  IsDefined,
   IsInt,
   IsIn,
   IsNotEmpty,
@@ -40,6 +42,7 @@ class BuilderComponentDto {
   @MaxLength(5000)
   content!: string;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => BuilderLayoutDto)
   layout!: BuilderLayoutDto;
@@ -52,6 +55,7 @@ export class SaveBuilderConfigurationDto {
 
   @IsArray()
   @ArrayMaxSize(100)
+  @ArrayUnique((component: BuilderComponentDto) => component.id)
   @ValidateNested({ each: true })
   @Type(() => BuilderComponentDto)
   components!: BuilderComponentDto[];
