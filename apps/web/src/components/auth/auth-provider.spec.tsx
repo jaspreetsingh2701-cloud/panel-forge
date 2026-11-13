@@ -28,6 +28,7 @@ describe('AuthProvider session restoration', () => {
             email: 'user@example.com',
             displayName: 'PanelForge User',
             emailVerifiedAt: null,
+            platformRole: 'PLATFORM_USER',
             tenants: [],
           }),
         } as Response;
