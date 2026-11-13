@@ -1,7 +1,7 @@
 ---
 title: PanelForge delivery roadmap
-status: Proposed
-version: 0.3
+status: Active
+version: 0.4
 last_updated: 2026-11-13
 source_of_truth: true
 ---
@@ -17,7 +17,6 @@ source_of_truth: true
 - API conventions.
 - Testing, CI/CD and versioning strategy.
 - ADRs, roadmap, backlog and progress tracker.
-Exit when blocking choices for Phase 1 are resolved and docs are internally consistent.
 
 ## Phase 1 — Monorepo and infrastructure
 **Outcome:** reproducible local environment and running web/API skeleton.
@@ -39,42 +38,69 @@ Exit when blocking choices for Phase 1 are resolved and docs are internally cons
 
 ## Phase 2.5 — Engineering quality foundation
 Delivered in small, verifiable batches. See the [Phase 2.5 engineering quality plan](../06-operations/phase-2-5-engineering-quality-plan.md).
-- 2.5.1 CI baseline: frozen-lockfile install, API/web typechecks and production builds.
-- 2.5.2 ESLint, Prettier, Husky, lint-staged and Commitlint.
-- 2.5.3 Jest, React Testing Library, PostgreSQL integration tests and coverage thresholds.
-- 2.5.4 Playwright, Swagger/OpenAPI and security scanning.
-- 2.5.5 Protected staging workflow, smoke tests and rollback checklist.
-Exit only when every batch passes its documented criteria.
+- CI, frozen-lockfile install, API/web typechecks and production builds.
+- ESLint, Prettier, Husky, lint-staged and Commitlint.
+- Jest, React Testing Library, PostgreSQL integration tests and coverage thresholds.
+- Playwright, Swagger/OpenAPI and security scanning.
+- Protected staging workflow, smoke tests and rollback checklist.
+Staging deployment remains intentionally deferred.
 
 ## Phase 3 — Metadata and dynamic records
-Resources, fields, stable IDs, schema versions, JSONB records, dynamic CRUD, typed query grammar and permission foundations.
+**Outcome:** tenant-scoped application data model and safe managed-record APIs.
+- Resources, fields, stable IDs, schema versions and JSONB records.
+- Dynamic CRUD and typed query grammar.
+- Tenant ownership and permission foundations.
 
 ## Phase 4 — Visual builder
-Curated component registry, canvas, property panel, drag/drop, forms, tables, draft persistence and preview.
+**Outcome:** author and persist a validated application draft.
+- Curated component registry, canvas, property panel and responsive layouts.
+- Resource-bound forms and tables; data-driven metrics and charts.
+- Draft save/restore, validation, undo/redo and duplicate.
+- Authenticated saved-draft runtime preview.
+- Super Admin documentation and API reference.
 
-## Phase 5 — Data-source adapters
-Managed PostgreSQL first; REST next. GraphQL and MySQL remain later.
+## Phase 5 — Application runtime
+**Outcome:** a workspace application can be used for real work, not only previewed.
+- 5.0 Runtime access smoke tests and hardening: browser tests for unauthenticated access, login failure states and route protection.
+- 5.1 Runtime data operations: safe record creation, reading, editing and deletion through resource-bound forms/tables.
+- 5.2 Runtime navigation and pages: multiple pages, application navigation and responsive route handling.
+- Loading, empty, validation, success and error states throughout.
+Exit when a tenant member can complete an authorised end-to-end record workflow in the runtime.
 
 ## Phase 6 — Dynamic RBAC
-Tenant/application roles, resource/action permissions, field restrictions, record scopes and security regression tests.
+**Outcome:** permissions are explicit and enforced by the API.
+- Platform, tenant and application role boundaries.
+- Builder/editor and consumer/viewer application assignments.
+- Resource/action permissions, field restrictions and record scopes.
+- Negative authorization tests for cross-tenant and cross-role access.
+Exit when every runtime read and mutation is authorised server-side and covered by security tests.
 
-## Phase 7 — Page builder and dashboards
-Navigation, layouts, KPI cards, charts, filters and responsive runtime states.
+## Phase 7 — Publishing and access control
+**Outcome:** users can safely release and roll back application versions.
+- Draft versus immutable published configuration snapshots.
+- Publish-time validation and atomic activation.
+- Runtime resolves the active immutable snapshot.
+- Current permissions are evaluated at request time, not frozen into snapshots.
+- Version history, rollback and audit events.
+Follow [ADR-005: Immutable published application snapshots](../adr/ADR-005-immutable-publishing.md); revisit its proposed status before implementation.
 
-## Phase 8 — Actions, publishing and audit
-Predefined safe actions, immutable snapshots, atomic activation, rollback, audit and published runtime access.
+## Phase 8 — Production hardening
+**Outcome:** operational readiness for a controlled production launch.
+- Observability, structured logs, error tracking and service health.
+- Audit coverage, backups and restore drills.
+- Rate/query limits, security review and performance budgets.
+- Deployment rollback, accessibility and reliability checks.
+- Staging smoke tests and release checklist.
 
-## Phase 9 — Production hardening
-Observability, backups/restore drills, rate/query limits, security review, deployment rollback, performance and accessibility.
+## Future enhancements
+- Data-source adapters: REST first, then GraphQL/MySQL where validated demand exists.
+- Relationships and advanced field/record restrictions beyond MVP requirements.
+- Billing, marketplace, AI generation, arbitrary JS, advanced workflow branching, enterprise SSO/SCIM, custom domains, dedicated databases and multi-region deployment.
 
 ## Post-MVP engineering learning
-
 After the end-to-end MVP works, revisit cloud deployment alternatives (AWS, Google Cloud and Azure), Nginx/reverse proxies, DNS/TLS/HTTPS, OAuth/OIDC/Google sign-in, managed identity providers, WCAG accessibility, Core Web Vitals, observability, reliability, infrastructure as code, Kubernetes and backend architecture alternatives.
 
 Track practical experiments, comparisons and decisions in the [Post-MVP engineering learning checklist](post-mvp-engineering-learning-checklist.md). These topics are not MVP blockers.
-
-## Scope protection
-Defer billing, marketplace, AI generation, arbitrary JS, advanced workflow branching, enterprise SSO/SCIM, custom domains, dedicated databases and multi-region deployment unless validated customer needs change priorities.
 
 ## Planning estimate
 A substantial MVP may take roughly 16–24 weeks of focused part-time work, potentially longer while learning/debugging. This is a planning range, not a commitment; update using actual velocity.
