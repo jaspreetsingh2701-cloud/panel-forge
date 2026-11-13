@@ -33,7 +33,7 @@ The initial registry lives in apps/web/src/features/builder/component-registry.t
 - **Canvas:** select and inspect the current in-memory page composition.
 - **Inspector:** edit the selected component's supported properties.
 
-The canvas is not a freeform layout engine in this increment. Drag-and-drop, responsive layout controls, resource binding, field mapping and persistence are separate follow-up increments.
+The canvas is not a freeform layout engine. Phase 4.1 provides the editor shell; Phase 4.2 adds ordering through keyboard-accessible move controls and native drag-and-drop. Responsive layout controls, resource binding, field mapping and persistence remain separate follow-up increments.
 
 ## Security and tenancy
 - The builder route loads the application from the authenticated tenant-scoped applications endpoint.
@@ -51,8 +51,16 @@ The canvas is not a freeform layout engine in this increment. Drag-and-drop, res
 6. The UI clearly communicates that changes are not persisted.
 7. Registry unit tests, web typecheck, lint and production build pass in CI.
 
+## Phase 4.2 — Canvas interactions and ordering
+- Select a component from its canvas toolbar or preview surface.
+- Move components up and down with labelled, keyboard-operable controls.
+- Reorder components by dragging the dedicated drag handle onto another component.
+- Keep the selected component selected after a move and choose a predictable neighbouring component after deletion.
+- Announce add, move and remove actions through a polite live region.
+- Keep ordering in memory only; do not imply that the composition has been saved.
+
 ## Follow-up increments
-- 4.2 Canvas interactions and ordering.
+- 4.3 Canvas layout interactions and responsive layout primitives.
 - 4.3 Responsive layout primitives and page structure.
 - 4.4 Resource-bound forms and tables.
 - 4.5 Draft configuration persistence and restore.
