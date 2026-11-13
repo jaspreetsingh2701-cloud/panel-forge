@@ -382,6 +382,7 @@ export default function BuilderPage() {
                     <option value="">Choose a number field…</option>{resourceFields.filter((field) => field.type === 'NUMBER').map((field) => <option key={field.id} value={field.key}>{field.name}</option>)}
                   </select>
                 </label>}
+                {selectedAggregation !== 'count' && !selectedAggregateField && <small className="builder-layout-help">Choose a numeric field to calculate this metric or chart.</small>}
                 {selectedComponent.type === 'chart' && <label className="pf-field builder-property-field"><span className="pf-label">Group by</span>
                   <select className="pf-input" value={selectedComponent.dataBinding?.groupBy ?? ''} onChange={(event) => updateDataBinding('groupBy', event.target.value)}>
                     <option value="">No grouping · total only</option>{resourceFields.map((field) => <option key={field.id} value={field.key}>{field.name}</option>)}
