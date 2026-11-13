@@ -152,6 +152,9 @@ export default function BuilderPage() {
     void Promise.resolve().then(() => {
       if (cancelled) return;
       setLoadingResourceId(selectedResourceId);
+      setResourceFields([]);
+      setPreviewRecords([]);
+      setBindingError('');
       const fieldsRequest = fetch(base + '/fields', { headers, credentials: 'include', cache: 'no-store' });
       const recordsRequest = selectedType === 'table'
         ? fetch(base + '/records?page=1&pageSize=5', { headers, credentials: 'include', cache: 'no-store' })
