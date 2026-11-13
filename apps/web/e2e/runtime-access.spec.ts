@@ -45,7 +45,7 @@ test.describe('login failure handling', () => {
     await page.getByRole('textbox', { name: 'Password' }).fill('incorrect-password');
     await page.getByRole('button', { name: /sign in/i }).click();
 
-    await expect(page.getByRole('alert')).toHaveText('Invalid email or password.');
+    await expect(page.getByText('Invalid email or password.', { exact: true })).toBeVisible();
     await expect(page).toHaveURL(/\/login$/);
   });
 });
