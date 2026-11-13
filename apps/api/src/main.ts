@@ -26,6 +26,7 @@ async function bootstrap() {
       .setDescription('Versioned PanelForge platform API')
       .setVersion('1.0')
       .addBearerAuth()
+      .addCookieAuth('pf_refresh', { type: 'apiKey', in: 'cookie', name: 'pf_refresh' }, 'pf_refresh')
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api/v1/docs', app, document, {

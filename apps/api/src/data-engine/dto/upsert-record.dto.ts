@@ -1,4 +1,8 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsObject } from 'class-validator';
+
 export class UpsertRecordDto {
- @IsObject() data!: Record<string, unknown>;
+  @ApiProperty({ type: 'object', additionalProperties: true, example: { name: 'Acme Ltd', status: 'Open' } })
+  @IsObject()
+  data!: Record<string, unknown>;
 }

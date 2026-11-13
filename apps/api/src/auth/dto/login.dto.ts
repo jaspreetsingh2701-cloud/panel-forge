@@ -1,21 +1,15 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import {
-  IsEmail,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class LoginDto {
-  // Normalize email so login is case-insensitive.
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
+  @ApiProperty({ example: 'alex@example.com', maxLength: 320 })
+  @Transform(({ value }) => typeof value === 'string' ? value.trim().toLowerCase() : value)
   @IsEmail()
   @MaxLength(320)
   email!: string;
 
-  // Do not trim passwords: whitespace can be intentional.
+  @ApiProperty({ example: 'your-password', minLength: 1, maxLength: 128, writeOnly: true })
   @IsString()
   @MinLength(1)
   @MaxLength(128)
