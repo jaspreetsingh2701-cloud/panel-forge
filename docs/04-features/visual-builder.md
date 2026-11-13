@@ -60,7 +60,6 @@ The canvas is not a freeform layout engine. Phase 4.1 provides the editor shell;
 - Keep ordering in memory only; do not imply that the composition has been saved.
 
 ## Follow-up increments
-- 4.3 Canvas layout interactions and responsive layout primitives.
 - 4.3 Responsive layout primitives and page structure.
 - 4.4 Resource-bound forms and tables.
 - 4.5 Draft configuration persistence and restore.
