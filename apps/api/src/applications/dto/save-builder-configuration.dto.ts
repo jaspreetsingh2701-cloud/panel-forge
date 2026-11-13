@@ -1,8 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize, ArrayUnique, IsArray, IsDefined, IsInt, IsIn,
-  IsNotEmpty, IsString, IsUUID, MaxLength, Min, ValidateNested,
+  IsNotEmpty, IsString, IsUUID, MaxLength, Min, ValidateNested, IsOptional,
 } from 'class-validator';
 
 class BuilderLayoutDto {
@@ -13,6 +13,20 @@ class BuilderLayoutDto {
   @ApiProperty({ enum: ['compact', 'comfortable', 'spacious'], example: 'comfortable' })
   @IsIn(['compact', 'comfortable', 'spacious'])
   spacing!: 'compact' | 'comfortable' | 'spacious';
+}
+
+class BuilderDataBindingDto {
+  @ApiPropertyOptional({ format: 'uuid', nullable: true, description: 'Resource selected for this component.' })
+  @IsOptional() @IsUUID()
+  resourceId?: string | null;
+
+  @ApiPropertyOptional({ type: [String], maxItems: 50, description: 'Visible resource field keys, in display order.' })
+  @IsOptional() @IsArray() @ArrayMaxSize(50) @ArrayUnique() @IsString({ each: true })
+  columns?: string[];
+
+  @ApiPropertyOptional({ enum: ['create', 'edit'], default: 'create' })
+  @IsOptional() @IsIn(['create', 'edit'])
+  mode?: 'create' | 'edit';
 }
 
 class BuilderComponentDto {
@@ -39,6 +53,10 @@ class BuilderComponentDto {
   @ApiProperty({ type: BuilderLayoutDto })
   @IsDefined() @ValidateNested() @Type(() => BuilderLayoutDto)
   layout!: BuilderLayoutDto;
+
+  @ApiPropertyOptional({ type: BuilderDataBindingDto })
+  @IsOptional() @ValidateNested() @Type(() => BuilderDataBindingDto)
+  dataBinding?: BuilderDataBindingDto;
 }
 
 export class SaveBuilderConfigurationDto {

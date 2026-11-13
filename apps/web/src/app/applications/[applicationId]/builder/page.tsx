@@ -6,6 +6,9 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useAuth } from '@/components/auth/auth-provider';
 import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, moveBuilderComponent, type BuilderComponent, type BuilderComponentType, type BuilderPropertyKey, type BuilderLayoutWidth, type BuilderLayoutSpacing } from '@/features/builder/component-registry';
 type Application = { id: string; name: string; description: string | null; status: 'DRAFT' | 'ARCHIVED' };
+type Resource = { id: string; name: string; key: string; _count?: { records: number; fields: number } };
+type ResourceField = { id: string; key: string; name: string; type: 'TEXT' | 'NUMBER' | 'BOOLEAN' | 'DATE' | 'SELECT' | 'RELATION'; required: boolean; options: string[] };
+type ResourceRecord = { id: string; data: Record<string, unknown>; updatedAt: string };
 
 // Compare persisted JSON data independent of object-key ordering (PostgreSQL JSONB may reorder keys).
 function stableSerialize(value: unknown): string {
@@ -21,10 +24,29 @@ function stableSerialize(value: unknown): string {
 
 const categories = Array.from(new Set(COMPONENT_REGISTRY.map((definition) => definition.category)));
 
-function ComponentPreview({ component }: { component: BuilderComponent }) {
+function ComponentPreview({ component, fields = [], records = [], isLoadingBinding = false }: { component: BuilderComponent; fields?: ResourceField[]; records?: ResourceRecord[]; isLoadingBinding?: boolean }) {
   if (component.type === 'metric') return <div className="builder-preview-metric"><span>{component.title}</span><strong>{component.content || '—'}</strong><small>{component.description}</small></div>;
-  if (component.type === 'table') return <div className="builder-preview-table-wrap"><h4>{component.title}</h4><p>{component.description}</p><table className="builder-preview-table"><thead><tr><th>Name</th><th>Status</th><th>Updated</th></tr></thead><tbody><tr><td>Sample record</td><td><span className="pf-badge pf-badge--success">Active</span></td><td>Today</td></tr><tr><td>Another record</td><td><span className="pf-badge">Draft</span></td><td>Yesterday</td></tr></tbody></table></div>;
-  if (component.type === 'form') return <div className="builder-preview-form"><h4>{component.title}</h4><p>{component.description}</p><label className="pf-field"><span className="pf-label">Example field</span><input className="pf-input" disabled placeholder="Generated from resource fields" /></label><button className="pf-button pf-button--primary pf-button--sm" type="button" disabled>Submit preview</button></div>;
+  if (component.type === 'table') {
+    const selectedColumns = Array.isArray(component.dataBinding?.columns) ? component.dataBinding.columns : fields.slice(0, 3).map((field) => field.key);
+    const visibleFields = fields.filter((field) => selectedColumns.includes(field.key));
+    return <div className="builder-preview-table-wrap"><h4>{component.title}</h4><p>{component.description}</p>
+      {!component.dataBinding?.resourceId ? <p className="builder-binding-empty">Choose a resource in Properties to preview its records.</p>
+        : isLoadingBinding ? <p className="builder-binding-empty">Loading resource records…</p>
+        : fields.length === 0 ? <p className="builder-binding-empty">This resource has no fields yet.</p>
+        : records.length === 0 ? <p className="builder-binding-empty">No records found for this resource.</p>
+        : <table className="builder-preview-table"><thead><tr>{visibleFields.map((field) => <th key={field.key}>{field.name}</th>)}</tr></thead><tbody>{records.map((record) => <tr key={record.id}>{visibleFields.map((field) => <td key={field.key}>{String(record.data[field.key] ?? '—')}</td>)}</tr>)}</tbody></table>}
+    </div>;
+  }
+  if (component.type === 'form') return <div className="builder-preview-form"><h4>{component.title}</h4><p>{component.description}</p>
+    {!component.dataBinding?.resourceId ? <p className="builder-binding-empty">Choose a resource in Properties to generate its fields.</p>
+      : isLoadingBinding ? <p className="builder-binding-empty">Loading resource fields…</p>
+      : fields.length === 0 ? <p className="builder-binding-empty">This resource has no fields yet.</p>
+      : fields.map((field) => <label className="pf-field" key={field.id}><span className="pf-label">{field.name}{field.required ? ' *' : ''}</span>{field.type === 'SELECT'
+        ? <select className="pf-input" disabled defaultValue=""><option value="">Choose {field.name.toLowerCase()}</option>{field.options.map((option) => <option key={option}>{option}</option>)}</select>
+        : field.type === 'BOOLEAN' ? <input type="checkbox" disabled aria-label={field.name} />
+        : <input className="pf-input" disabled type={field.type === 'NUMBER' ? 'number' : field.type === 'DATE' ? 'date' : 'text'} placeholder={field.type === 'RELATION' ? 'Related record' : field.name} />}</label>)}
+    <button className="pf-button pf-button--primary pf-button--sm" type="button" disabled>Submit preview · runtime coming next</button>
+  </div>;
   if (component.type === 'chart') return <div className="builder-preview-chart"><h4>{component.title}</h4><p>{component.description}</p><div className="builder-chart-bars" aria-label="Illustrative chart preview">{[42, 68, 54, 82, 61, 94, 72].map((height, index) => <span key={index} style={{ height: height + '%' }} />)}</div><small>{component.content}</small></div>;
   return <div className="builder-preview-text"><h3>{component.title}</h3><p>{component.content}</p></div>;
 }
@@ -47,6 +69,11 @@ export default function BuilderPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [interactionMessage, setInteractionMessage] = useState('');
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [resourceFields, setResourceFields] = useState<ResourceField[]>([]);
+  const [previewRecords, setPreviewRecords] = useState<ResourceRecord[]>([]);
+  const [loadingResourceId, setLoadingResourceId] = useState<string | null>(null);
+  const [bindingError, setBindingError] = useState('');
 
   useEffect(() => {
     if (!user) void refreshSession().then((authenticated) => { if (!authenticated) router.replace('/login'); });
@@ -95,11 +122,61 @@ export default function BuilderPage() {
     return () => { cancelled = true; };
   }, [user, tenant, accessToken, applicationId]);
 
+  useEffect(() => {
+    if (!user || !tenant || !accessToken) return;
+    let cancelled = false;
+    fetch('/api/v1/tenants/' + tenant.id + '/applications/' + applicationId + '/resources', {
+      headers: { Authorization: 'Bearer ' + accessToken }, credentials: 'include', cache: 'no-store',
+    }).then(async (response) => {
+      if (!response.ok) throw new Error('Could not load application resources.');
+      return response.json() as Promise<Resource[]>;
+    }).then((items) => { if (!cancelled) setResources(Array.isArray(items) ? items : []); })
+      .catch((loadError) => { if (!cancelled) setBindingError(loadError instanceof Error ? loadError.message : 'Could not load resources.'); });
+    return () => { cancelled = true; };
+  }, [user, tenant, accessToken, applicationId]);
+
   const hasUnsavedChanges = stableSerialize(components) !== stableSerialize(savedComponents);
   const canSave = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
   const selectedComponent = components.find((component) => component.id === selectedId) ?? null;
   const selectedDefinition = selectedComponent ? getBuilderComponentDefinition(selectedComponent.type) : undefined;
   const selectedIndex = selectedId ? components.findIndex((component) => component.id === selectedId) : -1;
+  const selectedResourceId = selectedComponent?.dataBinding?.resourceId ?? null;
+  const selectedType = selectedComponent?.type ?? null;
+  const isLoadingBinding = Boolean(selectedResourceId && loadingResourceId === selectedResourceId);
+
+  useEffect(() => {
+    if (!user || !tenant || !accessToken || !selectedResourceId || !selectedType || !['table', 'form'].includes(selectedType)) return;
+    let cancelled = false;
+    const base = '/api/v1/tenants/' + tenant.id + '/applications/' + applicationId + '/resources/' + selectedResourceId;
+    const headers = { Authorization: 'Bearer ' + accessToken };
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoadingResourceId(selectedResourceId);
+      setResourceFields([]);
+      setPreviewRecords([]);
+      setBindingError('');
+      const fieldsRequest = fetch(base + '/fields', { headers, credentials: 'include', cache: 'no-store' });
+      const recordsRequest = selectedType === 'table'
+        ? fetch(base + '/records?page=1&pageSize=5', { headers, credentials: 'include', cache: 'no-store' })
+        : Promise.resolve(null);
+      return Promise.all([fieldsRequest, recordsRequest]);
+    }).then(async (responses) => {
+      if (!responses || cancelled) return;
+      const [fieldsResponse, recordsResponse] = responses;
+      if (!fieldsResponse.ok) throw new Error('Could not load fields for the selected resource.');
+      const fields = await fieldsResponse.json() as ResourceField[];
+      let records: ResourceRecord[] = [];
+      if (recordsResponse) {
+        if (!recordsResponse.ok) throw new Error('Could not load records for the selected resource.');
+        const payload = await recordsResponse.json() as { items?: ResourceRecord[] };
+        records = Array.isArray(payload.items) ? payload.items : [];
+      }
+      if (!cancelled) { setResourceFields(fields); setPreviewRecords(records); }
+    }).catch((loadError) => {
+      if (!cancelled) { setResourceFields([]); setPreviewRecords([]); setBindingError(loadError instanceof Error ? loadError.message : 'Could not load resource data.'); }
+    }).finally(() => { if (!cancelled) setLoadingResourceId(null); });
+    return () => { cancelled = true; };
+  }, [user, tenant, accessToken, applicationId, selectedResourceId, selectedType]);
 
   async function saveConfiguration() {
     if (!tenant || !accessToken || builderVersion === null || !canSave || !hasUnsavedChanges || isSaving) return;
@@ -165,6 +242,20 @@ export default function BuilderPage() {
     if (!selectedComponent) return;
     setComponents((current) => current.map((component) => component.id === selectedComponent.id ? { ...component, [key]: value } : component));
   }
+  function updateDataBinding(key: 'resourceId' | 'mode' | 'columns', value: string | string[] | null) {
+    if (!selectedComponent) return;
+    setComponents((current) => current.map((component) => {
+      if (component.id !== selectedComponent.id) return component;
+      const existing = component.dataBinding ?? { resourceId: null };
+      const dataBinding = key === 'resourceId'
+        ? { ...existing, resourceId: value as string | null, columns: undefined }
+        : key === 'mode'
+          ? { ...existing, mode: value as 'create' | 'edit' }
+          : { ...existing, columns: value as string[] };
+      return { ...component, dataBinding };
+    }));
+  }
+
   function moveComponent(sourceIndex: number, destinationIndex: number) {
     if (sourceIndex < 0 || destinationIndex < 0 || sourceIndex >= components.length || destinationIndex >= components.length || sourceIndex === destinationIndex) return;
     const moving = components[sourceIndex];
@@ -229,7 +320,7 @@ export default function BuilderPage() {
                   </div>
                   {component.id === selectedId && <span className="builder-selected-label">Selected</span>}
                 </div>
-                <div className="builder-node-preview" onClick={() => setSelectedId(component.id)}><ComponentPreview component={component} /></div>
+                <div className="builder-node-preview" onClick={() => setSelectedId(component.id)}><ComponentPreview component={component} fields={component.id === selectedId ? resourceFields : []} records={component.id === selectedId ? previewRecords : []} isLoadingBinding={component.id === selectedId && isLoadingBinding} /></div>
               </article>)}
             </div>}
           </div>
@@ -244,6 +335,28 @@ export default function BuilderPage() {
           {!selectedComponent || !selectedDefinition ? <div className="builder-inspector-empty"><span>◇</span><p>No component selected</p><small>Choose a component on the canvas to inspect its properties.</small></div> : <>
             <div className="builder-inspector-type"><span className="builder-component-icon">{selectedDefinition.icon}</span><span><strong>{selectedDefinition.label}</strong><small>{selectedDefinition.type}</small></span></div>
             {selectedDefinition.properties.map((property) => <label className="pf-field builder-property-field" key={property.key}><span className="pf-label">{property.label}</span>{property.control === 'textarea' ? <textarea className="pf-input builder-property-textarea" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} /> : <input className="pf-input" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} />}</label>)}
+            {(selectedComponent.type === 'table' || selectedComponent.type === 'form') && <div className="builder-data-binding-controls">
+              <p className="eyebrow">DATA SOURCE</p>
+              <label className="pf-field builder-property-field"><span className="pf-label">Resource</span>
+                <select className="pf-input" value={selectedComponent.dataBinding?.resourceId ?? ''} onChange={(event) => updateDataBinding('resourceId', event.target.value || null)}>
+                  <option value="">Choose a resource…</option>
+                  {resources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name} ({resource.key})</option>)}
+                </select>
+              </label>
+              {selectedComponent.type === 'table' && selectedResourceId && <div className="builder-binding-columns">
+                <span className="pf-label">Visible columns</span>
+                {resourceFields.map((field) => {
+                  const activeColumns = Array.isArray(selectedComponent.dataBinding?.columns) ? selectedComponent.dataBinding.columns : resourceFields.slice(0, 3).map((item) => item.key);
+                  return <label className="builder-binding-checkbox" key={field.id}><input type="checkbox" checked={activeColumns.includes(field.key)} onChange={(event) => updateDataBinding('columns', event.target.checked ? [...activeColumns, field.key] : activeColumns.filter((key) => key !== field.key))} /><span>{field.name}</span></label>;
+                })}
+                <small className="builder-layout-help">Select which resource fields appear in the table preview.</small>
+              </div>}
+              {selectedComponent.type === 'form' && <label className="pf-field builder-property-field"><span className="pf-label">Form mode</span>
+                <select className="pf-input" value={selectedComponent.dataBinding?.mode ?? 'create'} onChange={(event) => updateDataBinding('mode', event.target.value)}><option value="create">Create record</option><option value="edit">Edit record</option></select>
+              </label>}
+              <small className="builder-layout-help">The builder previews the selected resource schema. Form submission and record editing will be enabled in the application runtime phase.</small>
+              {bindingError && <p className="application-error" role="alert">{bindingError}</p>}
+            </div>}
             <div className="builder-layout-controls">
               <p className="eyebrow">LAYOUT</p>
               <label className="pf-field builder-property-field"><span className="pf-label">Column width</span><select className="pf-input" value={selectedComponent.layout.width} onChange={(event) => updateLayout('width', event.target.value as BuilderLayoutWidth)}><option value="full">Full width</option><option value="half">Half width</option><option value="third">One third</option></select></label>
