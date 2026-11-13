@@ -73,7 +73,6 @@ In non-production environments:
 - OpenAPI JSON: [http://localhost:4000/api/v1/openapi.json](http://localhost:4000/api/v1/openapi.json)
 
 Use **Authorize** for bearer-token endpoints. The refresh endpoint uses the HttpOnly `pf_refresh` cookie; refresh tokens are not returned in JSON. API documentation is disabled in production by default.
- Development Swagger documentation is available at [http://localhost:4000/api/v1/docs](http://localhost:4000/api/v1/docs).
 
 The API connects to PostgreSQL during startup, so start the database before starting the API.
 
