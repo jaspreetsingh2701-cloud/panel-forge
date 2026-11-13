@@ -2,12 +2,13 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
-  IsDateString,
+  IsInt,
   IsIn,
   IsNotEmpty,
   IsString,
   IsUUID,
   MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -45,8 +46,9 @@ class BuilderComponentDto {
 }
 
 export class SaveBuilderConfigurationDto {
-  @IsDateString()
-  expectedUpdatedAt!: string;
+  @IsInt()
+  @Min(0)
+  expectedVersion!: number;
 
   @IsArray()
   @ArrayMaxSize(100)
