@@ -332,3 +332,7 @@ footer span { color: var(--secondary); padding: 0 5px; }
 .builder-layout-help{display:block;margin-top:4px;color:var(--muted);font-size:9px;line-height:1.5}
 @media(max-width:900px){.builder-canvas-node--width-third{flex-basis:calc(50% - 7px)}}
 @media(max-width:700px){.builder-canvas-node--width-full,.builder-canvas-node--width-half,.builder-canvas-node--width-third{flex-basis:100%}.builder-canvas-node--spacing-spacious .builder-node-preview{padding:18px}}
+
+/* Builder draft save feedback */
+.builder-save-message{max-width:1000px;margin:8px auto 0;color:var(--secondary);font-size:11px;line-height:1.5}
+.builder-save-message[role="status"]{color:var(--secondary)}

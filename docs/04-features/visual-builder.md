@@ -67,7 +67,36 @@ The canvas is not a freeform layout engine. Phase 4.1 provides the editor shell;
 - Preserve layout settings as data-only in-memory configuration; no custom CSS or executable values are accepted.
 - Keep the existing unsaved local-preview boundary.
 
+
+## Phase 4.5 — Draft configuration persistence and restore
+
+- Persist the builder's ordered component configuration as JSONB on the owning application.
+- Restore the saved component list and layout settings when the builder is opened.
+- Save explicitly; do not auto-save or imply that a draft has been published.
+- Restrict writes to active workspace owners and admins. Active workspace members may load the saved configuration.
+- Validate every component against the fixed registry contract at the API boundary: component IDs, type allowlist, supported text properties, layout width and spacing, and a maximum of 100 components.
+- Use a dedicated, monotonically increasing `builderVersion` as an optimistic concurrency token. Reject stale saves with HTTP 409 instead of overwriting a newer version.
+- Warn before the browser tab is closed or refreshed while local edits are unsaved. On a stale-save conflict, ask the user to reload the saved version before continuing.
+- Keep configuration data-only. Do not accept executable code, arbitrary HTML, custom component names or arbitrary CSS.
+- Saving persists a draft configuration only. Publishing, runtime rendering and resource binding remain separate capabilities.
+
+### API contract
+
+- `GET /api/v1/tenants/:tenantId/applications/:applicationId/builder` returns `components` and the current `version` token.
+- `PUT /api/v1/tenants/:tenantId/applications/:applicationId/builder` accepts `expectedVersion` and `components`, and returns the saved configuration with its incremented `version` token.
+- A stale `expectedVersion` returns HTTP 409. The client must not silently retry with a newer token.
+
+### Acceptance criteria
+
+1. Reopening an application restores component types, properties, order, widths and spacing.
+2. Explicit save persists the current composition and updates the saved state indicator.
+3. An unsaved edit is indicated and browser unload displays the native confirmation prompt.
+4. Workspace members can read the saved configuration; only owners and admins can write it.
+5. Invalid component types, malformed layout values, unknown properties and more than 100 components are rejected.
+6. Concurrent edits cannot silently overwrite one another.
+7. Migration, API service tests, web typecheck, lint and production build pass in CI.
+
 ## Follow-up increments
 - 4.4 Resource-bound forms and tables.
-- 4.5 Draft configuration persistence and restore.
+- 4.5 Draft configuration persistence and restore — delivered in the current implementation.
 - 4.6 Preview and validation feedback.

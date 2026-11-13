@@ -25,6 +25,12 @@ export default function BuilderPage() {
   const [isLoadingApplication, setIsLoadingApplication] = useState(true);
   const [error, setError] = useState('');
   const [components, setComponents] = useState<BuilderComponent[]>([]);
+  const [savedComponents, setSavedComponents] = useState<BuilderComponent[]>([]);
+  const [builderVersion, setBuilderVersion] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saveConflict, setSaveConflict] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [interactionMessage, setInteractionMessage] = useState('');
@@ -42,13 +48,30 @@ export default function BuilderPage() {
           headers: { Authorization: 'Bearer ' + accessToken }, credentials: 'include', cache: 'no-store',
         });
         if (!response.ok) {
-          const payload = await response.json().catch(() => null) as { message?: string | string[] } | null;
-          throw new Error(Array.isArray(payload?.message) ? payload.message.join(' ') : payload?.message || 'Could not load this application.');
+          const payload = await response.json().catch(() => null) as { message?: string | string[]; error?: { message?: string | string[] } } | null;
+          const responseMessage = payload?.error?.message ?? payload?.message;
+          throw new Error(Array.isArray(responseMessage) ? responseMessage.join(' ') : responseMessage || 'Could not load this application.');
         }
         const applications = await response.json() as Application[];
         const current = applications.find((item) => item.id === applicationId);
         if (!current) throw new Error('Application not found in this workspace.');
-        if (!cancelled) { setApplication(current); setError(''); }
+        const builderResponse = await fetch('/api/v1/tenants/' + tenant.id + '/applications/' + applicationId + '/builder', {
+          headers: { Authorization: 'Bearer ' + accessToken }, credentials: 'include', cache: 'no-store',
+        });
+        if (!builderResponse.ok) {
+          const payload = await builderResponse.json().catch(() => null) as { message?: string | string[]; error?: { message?: string | string[] } } | null;
+          const responseMessage = payload?.error?.message ?? payload?.message;
+          throw new Error(Array.isArray(responseMessage) ? responseMessage.join(' ') : responseMessage || 'Could not restore the saved builder configuration.');
+        }
+        const builderConfig = await builderResponse.json() as { components: BuilderComponent[]; version: number };
+        const restoredComponents = Array.isArray(builderConfig.components) ? builderConfig.components : [];
+        if (!cancelled) {
+          setApplication(current);
+          setComponents(restoredComponents);
+          setSavedComponents(restoredComponents);
+          setBuilderVersion(builderConfig.version);
+          setError('');
+        }
       } catch (loadError) {
         if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'Could not load this application.');
       } finally {
@@ -59,9 +82,55 @@ export default function BuilderPage() {
     return () => { cancelled = true; };
   }, [user, tenant, accessToken, applicationId]);
 
+  const hasUnsavedChanges = JSON.stringify(components) !== JSON.stringify(savedComponents);
+  const canSave = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
   const selectedComponent = components.find((component) => component.id === selectedId) ?? null;
   const selectedDefinition = selectedComponent ? getBuilderComponentDefinition(selectedComponent.type) : undefined;
   const selectedIndex = selectedId ? components.findIndex((component) => component.id === selectedId) : -1;
+
+  async function saveConfiguration() {
+    if (!tenant || !accessToken || builderVersion === null || !canSave || !hasUnsavedChanges || isSaving) return;
+    setIsSaving(true);
+    setSaveError('');
+    setSaveConflict(false);
+    setSaveMessage('');
+    try {
+      const response = await fetch('/api/v1/tenants/' + tenant.id + '/applications/' + applicationId + '/builder', {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ expectedVersion: builderVersion, components }),
+      });
+      const payload = await response.json().catch(() => null) as { message?: string | string[]; error?: { message?: string | string[] }; components?: BuilderComponent[]; version?: number } | null;
+      if (!response.ok) {
+        const responseMessage = payload?.error?.message ?? payload?.message;
+        const message = Array.isArray(responseMessage) ? responseMessage.join(' ') : responseMessage || 'Could not save the builder configuration.';
+        if (response.status === 409) setSaveConflict(true);
+        throw new Error(message);
+      }
+      if (!payload || !Array.isArray(payload.components) || !payload.version) {
+        throw new Error('The server returned an invalid save response. Reload the builder before continuing.');
+      }
+      setSavedComponents(payload.components);
+      setBuilderVersion(payload.version);
+      setSaveMessage('All changes saved.');
+      setInteractionMessage('Builder configuration saved.');
+    } catch (saveError) {
+      setSaveError(saveError instanceof Error ? saveError.message : 'Could not save the builder configuration.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [hasUnsavedChanges]);
 
   function addComponent(type: BuilderComponentType) {
     const component = createBuilderComponent(type, crypto.randomUUID());
@@ -112,8 +181,12 @@ export default function BuilderPage() {
   return (
     <main className="builder-page">
       <header className="builder-topbar">
-        <div className="builder-topbar-title"><Link className="brand" href="/applications"><span className="brand-mark">P</span><span>PanelForge</span></Link><span className="builder-topbar-divider">/</span><Link className="breadcrumb-muted" href={'/applications/' + applicationId + '/resources'}>{application.name}</Link><span className="builder-topbar-divider">/</span><strong>Builder</strong></div>
-        <div className="builder-topbar-actions"><span className="pf-badge pf-badge--warning">Draft · local preview</span><ThemeToggle /></div>
+        <div className="builder-topbar-title"><Link className="brand" href="/applications" onClick={(event) => { if (hasUnsavedChanges && !window.confirm('You have unsaved builder changes. Leave without saving?')) event.preventDefault(); }}><span className="brand-mark">P</span><span>PanelForge</span></Link><span className="builder-topbar-divider">/</span><Link className="breadcrumb-muted" href={'/applications/' + applicationId + '/resources'} onClick={(event) => { if (hasUnsavedChanges && !window.confirm('You have unsaved builder changes. Leave without saving?')) event.preventDefault(); }}>{application.name}</Link><span className="builder-topbar-divider">/</span><strong>Builder</strong></div>
+        <div className="builder-topbar-actions">
+          <span className={'pf-badge ' + (hasUnsavedChanges ? 'pf-badge--warning' : 'pf-badge--success')}>{hasUnsavedChanges ? 'Unsaved changes' : 'Saved draft'}</span>
+          <button className="pf-button pf-button--primary pf-button--sm" type="button" onClick={() => void saveConfiguration()} disabled={!canSave || !hasUnsavedChanges || isSaving || builderVersion === null}>{isSaving ? 'Saving…' : 'Save changes'}</button>
+          <ThemeToggle />
+        </div>
       </header>
       {error && <p className="application-error builder-error" role="alert">{error}</p>}
       <div className="builder-workspace">
@@ -147,7 +220,10 @@ export default function BuilderPage() {
               </article>)}
             </div>}
           </div>
-          <p className="builder-canvas-footnote">Reorder with the arrow controls or drag handle. Changes remain in this local preview and are not saved.</p>
+          <p className="builder-canvas-footnote">Reorder with the arrow controls or drag handle. Changes are saved to the application draft configuration; publishing is not available yet.</p>
+          {saveError && <p className="application-error builder-error" role="alert">{saveError} {saveConflict && <button className="pf-button pf-button--ghost pf-button--sm" type="button" onClick={() => window.location.reload()}>Reload saved version</button>}</p>}
+          {saveMessage && !hasUnsavedChanges && <p className="builder-save-message" role="status">{saveMessage}</p>}
+          {!canSave && hasUnsavedChanges && <p className="builder-save-message" role="status">Only workspace owners and admins can save application changes.</p>}
           <p className="builder-interaction-status" role="status" aria-live="polite">{interactionMessage}</p>
         </section>
         <aside className="builder-panel builder-inspector" aria-label="Component properties">
