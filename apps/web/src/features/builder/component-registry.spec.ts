@@ -14,6 +14,11 @@ describe('builder component registry', () => {
       layout: { width: 'full', spacing: 'comfortable' },
     });
   });
+  it('supports optional resource bindings without changing component defaults', () => {
+    const table = createBuilderComponent('table', 'table-1');
+    expect(table.dataBinding).toBeUndefined();
+    expect(table.type).toBe('table');
+  });
   it('defaults components to a full-width comfortable layout', () => {
     expect(createBuilderComponent('text', 'component-layout').layout).toEqual({ width: 'full', spacing: 'comfortable' });
   });
