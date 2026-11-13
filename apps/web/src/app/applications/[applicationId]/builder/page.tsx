@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useAuth } from '@/components/auth/auth-provider';
-import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, type BuilderComponent, type BuilderComponentType, type BuilderPropertyKey } from '@/features/builder/component-registry';
+import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, moveBuilderComponent, type BuilderComponent, type BuilderComponentType, type BuilderPropertyKey } from '@/features/builder/component-registry';
 type Application = { id: string; name: string; description: string | null; status: 'DRAFT' | 'ARCHIVED' };
 const categories = Array.from(new Set(COMPONENT_REGISTRY.map((definition) => definition.category)));
 
@@ -26,6 +26,8 @@ export default function BuilderPage() {
   const [error, setError] = useState('');
   const [components, setComponents] = useState<BuilderComponent[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [interactionMessage, setInteractionMessage] = useState('');
 
   useEffect(() => {
     if (!user) void refreshSession().then((authenticated) => { if (!authenticated) router.replace('/login'); });
@@ -59,20 +61,38 @@ export default function BuilderPage() {
 
   const selectedComponent = components.find((component) => component.id === selectedId) ?? null;
   const selectedDefinition = selectedComponent ? getBuilderComponentDefinition(selectedComponent.type) : undefined;
+  const selectedIndex = selectedId ? components.findIndex((component) => component.id === selectedId) : -1;
+
   function addComponent(type: BuilderComponentType) {
     const component = createBuilderComponent(type, crypto.randomUUID());
     setComponents((current) => [...current, component]);
     setSelectedId(component.id);
+    setInteractionMessage(component.title + ' added to canvas.');
   }
   function updateSelected(key: BuilderPropertyKey, value: string) {
     if (!selectedComponent) return;
     setComponents((current) => current.map((component) => component.id === selectedComponent.id ? { ...component, [key]: value } : component));
   }
+  function moveComponent(sourceIndex: number, destinationIndex: number) {
+    if (sourceIndex < 0 || destinationIndex < 0 || sourceIndex >= components.length || destinationIndex >= components.length || sourceIndex === destinationIndex) return;
+    const moving = components[sourceIndex];
+    setComponents((current) => moveBuilderComponent(current, sourceIndex, destinationIndex));
+    setSelectedId(moving.id);
+    setInteractionMessage(moving.title + ' moved to position ' + (destinationIndex + 1) + '.');
+  }
   function removeSelected() {
     if (!selectedComponent) return;
+    const removedTitle = selectedComponent.title;
     const remaining = components.filter((component) => component.id !== selectedComponent.id);
     setComponents(remaining);
-    setSelectedId(remaining[0]?.id ?? null);
+    setSelectedId(remaining[Math.min(selectedIndex, remaining.length - 1)]?.id ?? null);
+    setInteractionMessage(removedTitle + ' removed from canvas.');
+  }
+  function handleDrop(targetIndex: number) {
+    if (!draggedId) return;
+    const sourceIndex = components.findIndex((component) => component.id === draggedId);
+    moveComponent(sourceIndex, targetIndex);
+    setDraggedId(null);
   }
 
   if (!user) return <main className="app-loading page-shell"><p>{isLoading ? 'Restoring your session…' : 'Opening workspace…'}</p></main>;
@@ -98,13 +118,27 @@ export default function BuilderPage() {
           <div className="builder-canvas-toolbar"><div><p className="eyebrow">PAGE 01</p><h1>{application.name}</h1></div><span className="pf-badge">Canvas preview</span></div>
           <div className="builder-canvas-board">
             {components.length === 0 ? <div className="builder-canvas-empty"><span className="builder-empty-icon">＋</span><h2>Your canvas is ready.</h2><p>Add a component from the left panel to start shaping this page.</p></div> : <div className="builder-canvas-components">
-              {components.map((component, index) => <article className={component.id === selectedId ? 'builder-canvas-node builder-canvas-node--selected' : 'builder-canvas-node'} key={component.id}>
-                <div className="builder-node-toolbar"><button className="builder-node-select" type="button" aria-pressed={component.id === selectedId} onClick={() => setSelectedId(component.id)}><span>{index + 1}. {component.title}</span><small>{component.type}</small></button>{component.id === selectedId && <span className="builder-selected-label">Selected</span>}</div>
-                <div className="builder-node-preview"><ComponentPreview component={component} /></div>
+              {components.map((component, index) => <article
+                className={(component.id === selectedId ? 'builder-canvas-node builder-canvas-node--selected' : 'builder-canvas-node') + (component.id === draggedId ? ' builder-canvas-node--dragging' : '')}
+                key={component.id}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => handleDrop(index)}
+              >
+                <div className="builder-node-toolbar">
+                  <button className="builder-node-select" type="button" aria-pressed={component.id === selectedId} onClick={() => setSelectedId(component.id)}><span>{index + 1}. {component.title}</span><small>{component.type}</small></button>
+                  <div className="builder-node-actions">
+                    <button className="builder-reorder-button" type="button" aria-label={'Move ' + component.title + ' up'} title="Move up" disabled={index === 0} onClick={() => moveComponent(index, index - 1)}>↑</button>
+                    <button className="builder-reorder-button" type="button" aria-label={'Move ' + component.title + ' down'} title="Move down" disabled={index === components.length - 1} onClick={() => moveComponent(index, index + 1)}>↓</button>
+                    <button className="builder-drag-handle" type="button" draggable="true" aria-label={'Drag to reorder ' + component.title} title="Drag to reorder" onDragStart={() => { setDraggedId(component.id); setSelectedId(component.id); }} onDragEnd={() => setDraggedId(null)}>⠿</button>
+                  </div>
+                  {component.id === selectedId && <span className="builder-selected-label">Selected</span>}
+                </div>
+                <div className="builder-node-preview" onClick={() => setSelectedId(component.id)}><ComponentPreview component={component} /></div>
               </article>)}
             </div>}
           </div>
-          <p className="builder-canvas-footnote">This is an editor preview with sample content. Resource binding, drag-and-drop and draft persistence are separate implementation steps.</p>
+          <p className="builder-canvas-footnote">Reorder with the arrow controls or drag handle. Changes remain in this local preview and are not saved.</p>
+          <p className="builder-interaction-status" role="status" aria-live="polite">{interactionMessage}</p>
         </section>
         <aside className="builder-panel builder-inspector" aria-label="Component properties">
           <div className="builder-panel-heading"><p className="eyebrow">CONFIGURE</p><h2>Properties</h2><p>{selectedComponent ? 'Edit the selected component.' : 'Select a component on the canvas.'}</p></div>
