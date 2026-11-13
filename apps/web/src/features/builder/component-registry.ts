@@ -1,9 +1,12 @@
 export type BuilderComponentType = 'text' | 'metric' | 'table' | 'form' | 'chart';
 export type BuilderPropertyKey = 'title' | 'description' | 'content';
-export type BuilderComponent = { id: string; type: BuilderComponentType; title: string; description: string; content: string };
+export type BuilderLayoutWidth = 'full' | 'half' | 'third';
+export type BuilderLayoutSpacing = 'compact' | 'comfortable' | 'spacious';
+export type BuilderLayout = { width: BuilderLayoutWidth; spacing: BuilderLayoutSpacing };
+export type BuilderComponent = { id: string; type: BuilderComponentType; title: string; description: string; content: string; layout: BuilderLayout };
 export type BuilderComponentDefinition = {
   type: BuilderComponentType; label: string; category: 'Content' | 'Data'; description: string; icon: string;
-  defaults: Omit<BuilderComponent, 'id' | 'type'>;
+  defaults: Omit<BuilderComponent, 'id' | 'type' | 'layout'>;
   properties: ReadonlyArray<{ key: BuilderPropertyKey; label: string; control: 'input' | 'textarea' }>;
 };
 export const COMPONENT_REGISTRY = [
@@ -30,7 +33,7 @@ export function isBuilderComponentType(value: unknown): value is BuilderComponen
 export function createBuilderComponent(type: BuilderComponentType, id: string): BuilderComponent {
   const definition = getBuilderComponentDefinition(type);
   if (!definition) throw new Error('Unsupported builder component type.');
-  return { id, type: definition.type, ...definition.defaults };
+  return { id, type: definition.type, ...definition.defaults, layout: { width: 'full', spacing: 'comfortable' } };
 }
 
 /** Return a reordered copy; invalid or out-of-range moves leave the list unchanged. */

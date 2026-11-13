@@ -33,7 +33,7 @@ The initial registry lives in apps/web/src/features/builder/component-registry.t
 - **Canvas:** select and inspect the current in-memory page composition.
 - **Inspector:** edit the selected component's supported properties.
 
-The canvas is not a freeform layout engine. Phase 4.1 provides the editor shell; Phase 4.2 adds ordering through keyboard-accessible move controls and native drag-and-drop. Responsive layout controls, resource binding, field mapping and persistence remain separate follow-up increments.
+The canvas is not a freeform layout engine. Phase 4.1 provides the editor shell; Phase 4.2 adds ordering through keyboard-accessible move controls and native drag-and-drop. Resource binding, field mapping and persistence remain separate follow-up increments.
 
 ## Security and tenancy
 - The builder route loads the application from the authenticated tenant-scoped applications endpoint.
@@ -59,8 +59,15 @@ The canvas is not a freeform layout engine. Phase 4.1 provides the editor shell;
 - Announce add, move and remove actions through a polite live region.
 - Keep ordering in memory only; do not imply that the composition has been saved.
 
+## Phase 4.3 — Responsive layout primitives
+- Configure each canvas component as full-width, half-width or one-third width on larger screens.
+- Use a 12-column CSS grid with tablet adjustments and a single-column mobile layout.
+- Configure compact, comfortable or spacious internal component spacing.
+- Expose layout settings through labelled inspector controls.
+- Preserve layout settings as data-only in-memory configuration; no custom CSS or executable values are accepted.
+- Keep the existing unsaved local-preview boundary.
+
 ## Follow-up increments
-- 4.3 Responsive layout primitives and page structure.
 - 4.4 Resource-bound forms and tables.
 - 4.5 Draft configuration persistence and restore.
 - 4.6 Preview and validation feedback.
