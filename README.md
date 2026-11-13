@@ -147,7 +147,7 @@ Run commands from the repository root unless noted otherwise.
 | `docker compose ps` | Check container and health status |
 | `pnpm --filter @panelforge/api db:generate` | Regenerate Prisma Client after schema changes |
 | `pnpm --filter @panelforge/api db:status` | Check whether local migrations are up to date |
-| `pnpm --filter @panelforge/api db:migrate --name add_<feature>` | Create and apply a new development migration |
+| `pnpm --filter @panelforge/api db:migrate --name add_applications` | Create and apply a new development migration |
 | `pnpm --filter @panelforge/api db:deploy` | Apply already-created/committed migrations |
 | `pnpm --filter @panelforge/api db:studio` | Open Prisma Studio |
 
