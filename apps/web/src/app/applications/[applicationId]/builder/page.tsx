@@ -166,7 +166,7 @@ export default function BuilderPage() {
       const aggregateQuery = new URLSearchParams({ operation: selectedAggregation });
       if (selectedAggregateField) aggregateQuery.set('field', selectedAggregateField);
       if (selectedGroupBy) aggregateQuery.set('groupBy', selectedGroupBy);
-      const aggregateRequest = ['metric', 'chart'].includes(selectedType)
+      const aggregateRequest = ['metric', 'chart'].includes(selectedType) && (selectedAggregation === 'count' || Boolean(selectedAggregateField))
         ? fetch(base + '/aggregate?' + aggregateQuery.toString(), { headers, credentials: 'include', cache: 'no-store' })
         : Promise.resolve(null);
       return Promise.all([fieldsRequest, recordsRequest, aggregateRequest]);
@@ -259,6 +259,7 @@ export default function BuilderPage() {
   }
   function updateDataBinding(key: 'resourceId' | 'mode' | 'columns' | 'aggregation' | 'field' | 'groupBy', value: string | string[] | null) {
     if (!selectedComponent) return;
+    if (key === 'resourceId') { setResourceFields([]); setPreviewRecords([]); setAggregatePreview(null); }
     setComponents((current) => current.map((component) => {
       if (component.id !== selectedComponent.id) return component;
       const existing = component.dataBinding ?? { resourceId: null };
