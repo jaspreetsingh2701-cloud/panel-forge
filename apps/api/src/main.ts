@@ -34,7 +34,7 @@ async function bootstrap() {
   // Production API reference is exposed only through this authenticated endpoint.
   app.use('/api/v1/platform/openapi.json', async (request: Request, response: Response) => {
     if (request.method !== 'GET') { response.sendStatus(405); return; }
-    const match = request.headers.authorization ? /^Bearer\\s+(\\S+)$/i.exec(request.headers.authorization) : null;
+    const match = request.headers.authorization ? /^Bearer\s+(\S+)$/i.exec(request.headers.authorization) : null;
     if (!match) { response.sendStatus(401); return; }
     try {
       const jwtService = app.get(JwtService);
