@@ -78,6 +78,7 @@ export default function BuilderPage() {
   const historyRef = useRef<{ past: BuilderComponent[][]; future: BuilderComponent[][]; previous: BuilderComponent[]; applying: boolean }>({ past: [], future: [], previous: [], applying: false });
   const shortcutActionsRef = useRef<{ undo: () => void; redo: () => void; duplicateSelected: () => void; removeSelected: () => void } | null>(null);
   const [, setHistoryRevision] = useState(0);
+  const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
 
   useEffect(() => {
     if (!user) void refreshSession().then((authenticated) => { if (!authenticated) router.replace('/login'); });
@@ -143,8 +144,8 @@ export default function BuilderPage() {
   const canSave = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
   const validationIssues = validateBuilderComponents(components, resources.map(resource => resource.id), resourceFields, selectedId, resourcesLoaded);
   const selectedValidationIssues = validationIssues.filter(issue => issue.componentId === selectedId);
-  const canUndo = historyRef.current.past.length > 0;
-  const canRedo = historyRef.current.future.length > 0;
+  const canUndo = historyAvailability.canUndo;
+  const canRedo = historyAvailability.canRedo;
   const selectedComponent = components.find((component) => component.id === selectedId) ?? null;
   const selectedDefinition = selectedComponent ? getBuilderComponentDefinition(selectedComponent.type) : undefined;
   const selectedIndex = selectedId ? components.findIndex((component) => component.id === selectedId) : -1;
@@ -203,8 +204,8 @@ export default function BuilderPage() {
 
 useEffect(() => {
   const history = historyRef.current;
-  if (history.applying) { history.applying = false; history.previous = components; setHistoryRevision(revision => revision + 1); return; }
-  if (stableSerialize(history.previous) !== stableSerialize(components)) { history.past = [...history.past, history.previous].slice(-50); history.future = []; history.previous = components; setHistoryRevision(revision => revision + 1); }
+  if (history.applying) { history.applying = false; history.previous = components; setHistoryAvailability({ canUndo: history.past.length > 0, canRedo: history.future.length > 0 }); setHistoryRevision(revision => revision + 1); return; }
+  if (stableSerialize(history.previous) !== stableSerialize(components)) { history.past = [...history.past, history.previous].slice(-50); history.future = []; history.previous = components; setHistoryAvailability({ canUndo: history.past.length > 0, canRedo: history.future.length > 0 }); setHistoryRevision(revision => revision + 1); }
 }, [components]);
 
 useEffect(() => {
@@ -224,13 +225,13 @@ useEffect(() => {
 
 function undo() {
   const history = historyRef.current; const previous = history.past.pop(); if (!previous) return;
-  history.future.push(components); history.applying = true; history.previous = previous; setComponents(previous);
+  history.future.push(components); history.applying = true; history.previous = previous; setHistoryAvailability({ canUndo: history.past.length > 0, canRedo: history.future.length > 0 }); setComponents(previous);
   setSelectedId(previous.find(item => item.id === selectedId)?.id ?? previous[previous.length - 1]?.id ?? null); setInteractionMessage('Last builder change undone.');
 }
 
 function redo() {
   const history = historyRef.current; const next = history.future.pop(); if (!next) return;
-  history.past.push(components); history.applying = true; history.previous = next; setComponents(next);
+  history.past.push(components); history.applying = true; history.previous = next; setHistoryAvailability({ canUndo: history.past.length > 0, canRedo: history.future.length > 0 }); setComponents(next);
   setSelectedId(next.find(item => item.id === selectedId)?.id ?? next[next.length - 1]?.id ?? null); setInteractionMessage('Builder change restored.');
 }
 
@@ -346,7 +347,9 @@ function redo() {
     setDraggedId(null);
   }
 
-  shortcutActionsRef.current = { undo, redo, duplicateSelected, removeSelected };
+  useEffect(() => {
+    shortcutActionsRef.current = { undo, redo, duplicateSelected, removeSelected };
+  });
 
   if (!user) return <main className="app-loading page-shell"><p>{isLoading ? 'Restoring your session…' : 'Opening workspace…'}</p></main>;
   if (isLoadingApplication) return <main className="app-loading page-shell"><p>Loading application builder…</p></main>;
