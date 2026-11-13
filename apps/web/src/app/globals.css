@@ -317,6 +317,7 @@ footer span { color: var(--secondary); padding: 0 5px; }
 /* Phase 4.3 — responsive canvas layout primitives
    Use explicit flex bases so each width maps directly to the available row
    space, independent of implicit grid auto-placement. */
+/* Manual UI validation confirmed: multiple one-third cards share a desktop row. */
 .builder-canvas-components{display:flex;flex-wrap:wrap;align-items:stretch;gap:14px}
 .builder-canvas-node{min-width:0;flex:0 0 100%}
 .builder-canvas-node--width-full{flex-basis:100%}
