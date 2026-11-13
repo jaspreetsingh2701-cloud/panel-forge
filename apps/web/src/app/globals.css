@@ -298,3 +298,17 @@ footer span { color: var(--secondary); padding: 0 5px; }
 .builder-inspector-type{display:flex;align-items:center;gap:10px;margin-bottom:22px;padding:11px;border:1px solid var(--border);border-radius:11px;background:var(--surface)}.builder-inspector-type strong{font-size:11px}.builder-inspector-type small{margin-top:4px;color:var(--muted);font-size:9px;text-transform:uppercase}.builder-property-field{margin-bottom:16px}.builder-property-field .pf-input{min-height:38px;font-size:11px}.builder-property-textarea{min-height:100px;resize:vertical}.builder-inspector-empty{display:flex;min-height:190px;flex-direction:column;align-items:center;justify-content:center;padding:16px;border:1px dashed var(--border);border-radius:12px;text-align:center}.builder-inspector-empty>span{color:var(--primary);font-size:25px}.builder-inspector-empty p{margin:10px 0 5px;font-size:12px;font-weight:700}.builder-inspector-empty small{color:var(--muted);font-size:10px;line-height:1.5}.builder-remove-button{width:100%;margin-top:12px}.builder-error{margin:12px 24px 0}
 @media(max-width:1100px){.builder-workspace{grid-template-columns:230px minmax(0,1fr)}.builder-inspector{grid-column:1/-1;border-top:1px solid var(--glass-border);border-left:0}.builder-inspector:not(:has(.builder-inspector-empty)){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.builder-inspector .builder-panel-heading,.builder-inspector .builder-inspector-type{grid-column:1/-1}.builder-inspector .builder-inspector-type{margin-bottom:0}.builder-remove-button{align-self:end}}
 @media(max-width:700px){.builder-topbar{align-items:flex-start;flex-direction:column;padding:13px 16px}.builder-topbar-title,.builder-topbar-actions{width:100%;flex-wrap:wrap}.builder-workspace{grid-template-columns:1fr}.builder-palette,.builder-inspector{border:0;border-bottom:1px solid var(--glass-border)}.builder-canvas-area{padding:18px 12px}.builder-canvas-board{min-height:360px;padding:12px}.builder-canvas-empty{min-height:320px}.builder-node-preview{padding:13px}.builder-preview-table{font-size:9px}.builder-inspector:not(:has(.builder-inspector-empty)){display:block}.builder-inspector .builder-inspector-type{margin-bottom:18px}}
+
+
+/* Phase 4.2 — accessible canvas selection and ordering */
+.builder-node-toolbar{flex-wrap:wrap}
+.builder-node-actions{display:flex;align-items:center;gap:5px;margin-left:auto}
+.builder-reorder-button,.builder-drag-handle{display:grid;width:29px;height:29px;place-items:center;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);cursor:pointer}
+.builder-reorder-button:hover:not(:disabled),.builder-drag-handle:hover{border-color:var(--primary);color:var(--primary)}
+.builder-reorder-button:disabled{cursor:not-allowed;opacity:.35}
+.builder-drag-handle{cursor:grab;font-size:17px;touch-action:none}
+.builder-drag-handle:active{cursor:grabbing}
+.builder-canvas-node--dragging{opacity:.45;border-style:dashed}
+.builder-node-preview{cursor:pointer}
+.builder-interaction-status{max-width:1000px;min-height:18px;margin:5px auto 0;color:var(--secondary);font-size:10px}
+.builder-node-actions button:focus-visible,.builder-node-select:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
