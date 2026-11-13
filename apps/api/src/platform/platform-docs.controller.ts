@@ -24,7 +24,7 @@ export class PlatformDocsController {
 
   @Get('document')
   async document(@Query('path') requestedPath?: string) {
-    if (!requestedPath || !/^(docs\\/.+|README\\.md|apps\\/(api|web)\\/README\\.md)$/.test(requestedPath) || !requestedPath.endsWith('.md')) {
+    if (!requestedPath || !/^(docs\/.+|README\.md|apps\/(api|web)\/README\.md)$/.test(requestedPath) || !requestedPath.endsWith('.md')) {
       throw new NotFoundException('Documentation file not found.');
     }
     const root = this.repositoryRoot();
@@ -49,14 +49,14 @@ export class PlatformDocsController {
     for (const entry of entries) {
       const absolute = join(directory, entry.name);
       if (entry.isDirectory()) await this.collectMarkdown(absolute, root, files);
-      else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) files.push(relative(root, absolute).split('\\\\').join('/'));
+      else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) files.push(relative(root, absolute).split('\\').join('/'));
     }
   }
 
   private toEntry(path: string): DocumentationEntry {
     const fileName = path.split('/').pop() ?? path;
-    const title = fileName.replace(/\\.md$/i, '').replace(/[-_]/g, ' ').replace(/\\b\\w/g, (letter) => letter.toUpperCase());
-    const category = path.startsWith('docs/') ? path.split('/')[1].replace(/^\\d+-/, '').replace(/[-_]/g, ' ') : 'Project guides';
+    const title = fileName.replace(/\.md$/i, '').replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+    const category = path.startsWith('docs/') ? path.split('/')[1].replace(/^\d+-/, '').replace(/[-_]/g, ' ') : 'Project guides';
     return { id: path, title, category, path };
   }
 }
