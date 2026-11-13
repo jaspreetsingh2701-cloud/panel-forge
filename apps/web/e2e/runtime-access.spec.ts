@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
-const unauthenticatedRefresh = async (page: Parameters<Parameters<typeof test>[1]>[0]['page']) => {
+const unauthenticatedRefresh = async (page: Page) => {
   await page.route('**/api/v1/auth/refresh', route =>
     route.fulfill({
       status: 401,
