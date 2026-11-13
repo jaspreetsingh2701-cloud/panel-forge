@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useAuth } from '@/components/auth/auth-provider';
+import { PlatformNavSection } from '@/components/navigation/platform-nav-section';
 import type { BuilderComponent } from '@/features/builder/component-registry';
 
 type Application = { id: string; name: string; description: string | null; status: 'DRAFT' | 'ARCHIVED' };
@@ -145,7 +146,8 @@ export default function ApplicationRuntimePage() {
       <div className="sidebar-workspace"><span className="workspace-avatar">{tenant?.name?.slice(0, 1) ?? 'W'}</span><span><strong>{tenant?.name ?? 'Workspace'}</strong><small>{tenant?.role ?? 'Member'}</small></span></div>
       <p className="sidebar-label">WORKSPACE</p>
       <nav className="sidebar-nav" aria-label="Workspace navigation"><Link className="sidebar-link" href="/app"><span>▦</span> Overview</Link><Link className="sidebar-link sidebar-link--active" href="/applications"><span>◫</span> Applications</Link><Link className="sidebar-link" href="/members"><span>♧</span> Members</Link></nav>
-      <div className="sidebar-bottom"><p className="sidebar-label">ACCOUNT</p><div className="account-mini"><span className="user-avatar">{greeting.slice(0, 1).toUpperCase()}</span><span><strong>{greeting}</strong><small>{user.email}</small></span></div></div>
+      <PlatformNavSection />
+ <div className="sidebar-bottom"><p className="sidebar-label">ACCOUNT</p><div className="account-mini"><span className="user-avatar">{greeting.slice(0, 1).toUpperCase()}</span><span><strong>{greeting}</strong><small>{user.email}</small></span></div></div>
     </aside>
     <section className="app-main">
       <header className="app-topbar"><div><Link className="breadcrumb-muted" href="/applications">Applications</Link><span className="breadcrumb-divider">/</span><strong>{application?.name ?? 'Runtime'}</strong></div><div className="app-top-actions"><span className="pf-badge pf-badge--info">Workspace preview</span><ThemeToggle /></div></header>

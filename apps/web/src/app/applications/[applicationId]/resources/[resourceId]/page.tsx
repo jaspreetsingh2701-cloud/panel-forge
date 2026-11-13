@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useParams,useRouter } from 'next/navigation';
 import { useCallback,useEffect,useMemo,useState,type FormEvent } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
+import { PlatformNavSection } from '@/components/navigation/platform-nav-section';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 type Field={id:string;name:string;key:string;type:'TEXT'|'NUMBER'|'BOOLEAN'|'DATE'|'SELECT'|'RELATION';required:boolean;options:string[];relationResourceId:string|null;position:number};
 type Resource={id:string;name:string;key:string;description:string|null;fields:Field[]};
@@ -39,6 +40,7 @@ export default function ResourceDetailPage(){
  <a className="sidebar-link sidebar-link--disabled" href="#data-sources"><span>⌘</span> Data sources <span className="pf-badge">Coming soon</span></a>
  <a className="sidebar-link" href="/members"><span>♧</span> Members <span className="pf-badge">Coming soon</span></a>
  </nav>
+ <PlatformNavSection />
  <div className="sidebar-bottom"><p className="sidebar-label">ACCOUNT</p><div className="account-mini"><span className="user-avatar">{greeting.slice(0,1).toUpperCase()}</span><span><strong>{greeting}</strong><small>{user.email}</small></span></div><button className="pf-button pf-button--ghost pf-button--sm signout-button" type="button" onClick={()=>void handleLogout()}>Sign out ↗</button></div></aside>
  <section className="app-main"><header className="app-topbar"><div><Link className="breadcrumb-muted" href="/applications">Applications</Link><span className="breadcrumb-divider">/</span><Link className="breadcrumb-muted" href={`/applications/${applicationId}/resources`}>Resources</Link><span className="breadcrumb-divider">/</span><strong>{resource?.name??'Resource'}</strong></div><div className="app-top-actions"><span className="topbar-user">{user.email}</span><ThemeToggle/></div></header><div className="dashboard-content">
  <div className="applications-heading"><div><p className="eyebrow">RESOURCE DATA</p><h1>{resource?.name??'Resource'} <span>records.</span></h1><p>{resource?.description||'Configure fields and manage records for this resource.'}</p></div><div className="resource-actions">{admin&&<button className="pf-button pf-button--ghost" onClick={()=>setFieldOpen(v=>!v)}>＋ Add field</button>}<button className="pf-button pf-button--primary" onClick={()=>openRecord()} disabled={!formFields.length}>＋ New record</button></div></div>
