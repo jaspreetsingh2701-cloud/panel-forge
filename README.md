@@ -4,7 +4,7 @@ PanelForge is a multi-tenant SaaS platform for visually building, configuring an
 
 Teams connect data sources, define resources and custom fields, design forms, tables and dashboards, configure access policies, and publish versioned admin experiences.
 
-> **Project status:** Phase 2 authentication and workspace foundation is merged. The current focus is Phase 2.5 engineering quality tooling before metadata and dynamic CRUD work.
+> **Project status:** Phases 0–3 and the Phase 2.5 engineering-quality baseline are merged. The current focus is Phase 4 — Visual Builder.
 
 ## Product direction
 
@@ -41,6 +41,7 @@ panelforge/
 │   ├── 00-product/
 │   ├── 01-architecture/
 │   ├── 02-database/
+│   ├── 04-features/
 │   ├── 05-api/
 │   ├── 06-operations/
 │   ├── 07-project-management/
@@ -53,6 +54,7 @@ panelforge/
 - [Documentation index](docs/README.md)
 - [Product definition](docs/00-product/product-definition.md)
 - [MVP scope](docs/00-product/mvp-scope.md)
+- [Visual builder specification](docs/04-features/visual-builder.md)
 - [Roadmap](docs/07-project-management/roadmap.md)
 - [Project progress](docs/07-project-management/progress.md)
 - [Phase 2.5 engineering quality plan](docs/06-operations/phase-2-5-engineering-quality-plan.md)
