@@ -71,7 +71,13 @@ export default function BuilderPage() {
   }
   function updateLayout(key: 'width' | 'spacing', value: BuilderLayoutWidth | BuilderLayoutSpacing) {
     if (!selectedComponent) return;
-    setComponents((current) => current.map((component) => component.id === selectedComponent.id ? { ...component, layout: { ...component.layout, [key]: value } } : component));
+    setComponents((current) => current.map((component) => {
+      if (component.id !== selectedComponent.id) return component;
+      const layout = key === 'width'
+        ? { ...component.layout, width: value as BuilderLayoutWidth }
+        : { ...component.layout, spacing: value as BuilderLayoutSpacing };
+      return { ...component, layout };
+    }));
   }
   function updateSelected(key: BuilderPropertyKey, value: string) {
     if (!selectedComponent) return;
