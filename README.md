@@ -61,14 +61,90 @@ panelforge/
 
 ## Development
 
-Use the Node.js version in `.nvmrc` and the pnpm version declared in the root `package.json`.
+Use Node.js 24.x (see `.nvmrc`) and pnpm 11.28.11.
 
-- Install: `pnpm install`
-- Run apps: `pnpm dev`
-- Typecheck: `pnpm typecheck`
-- Build: `pnpm build`
+### First-time setup
 
-See [API setup](apps/api/README.md) and [web setup](apps/web/README.md) for application-specific instructions.
+Run from the repository root:
+
+```bash
+pnpm install
+cp apps/api/.env.example apps/api/.env
+```
+
+Update `apps/api/.env` to use the local Compose database credentials:
+
+```dotenv
+DATABASE_URL="postgresql://panelforge:panelforge_dev@localhost:5432/panelforge"
+JWT_ACCESS_SECRET="replace-with-a-random-secret-at-least-32-bytes"
+```
+
+Start PostgreSQL and apply the committed migrations:
+
+```bash
+docker compose up -d postgres
+pnpm --filter @panelforge/api db:status
+pnpm --filter @panelforge/api db:deploy
+```
+
+### Run the applications
+
+Run each app in a separate terminal from the repository root:
+
+```bash
+# Terminal 1 — NestJS API (http://localhost:4000)
+pnpm --filter @panelforge/api dev
+
+# Terminal 2 — Next.js web app (http://localhost:3000)
+pnpm --filter @panelforge/web dev
+```
+
+Or start both applications together:
+
+```bash
+pnpm dev
+```
+
+API health check: [http://localhost:4000/api/v1/health](http://localhost:4000/api/v1/health)
+
+API Swagger docs (development): [http://localhost:4000/api/v1/docs](http://localhost:4000/api/v1/docs)
+
+### Common commands
+
+Run from the repository root:
+
+| Command | Purpose |
+|---|---|
+| `pnpm lint` | Run ESLint across the repository |
+| `pnpm lint:fix` | Automatically fix supported ESLint issues |
+| `pnpm format` | Format repository files with Prettier |
+| `pnpm format:check` | Check formatting of the configured root files |
+| `pnpm typecheck` | Typecheck workspace packages and apps |
+| `pnpm build` | Build all workspace apps and packages |
+| `pnpm --filter @panelforge/api test` | Run API unit tests |
+| `pnpm --filter @panelforge/api test:integration` | Run API integration tests |
+| `pnpm --filter @panelforge/api test:coverage` | Run API tests with coverage |
+| `pnpm --filter @panelforge/web test` | Run web unit tests |
+| `pnpm --filter @panelforge/web test:coverage` | Run web unit tests with coverage |
+| `pnpm --filter @panelforge/web test:e2e` | Run Playwright end-to-end tests |
+| `pnpm --filter @panelforge/api db:generate` | Regenerate Prisma Client |
+| `pnpm --filter @panelforge/api db:status` | Check local migration status |
+| `pnpm --filter @panelforge/api db:deploy` | Apply committed migrations to the configured database |
+| `pnpm --filter @panelforge/api db:migrate --name <name>` | Create and apply a new development migration |
+| `pnpm --filter @panelforge/api db:studio` | Open Prisma Studio |
+
+### Local database troubleshooting
+
+If an API endpoint returns `500 INTERNAL_SERVER_ERROR`, first check the API terminal for the request ID and underlying Prisma/database error, then run:
+
+```bash
+pnpm --filter @panelforge/api db:status
+pnpm --filter @panelforge/api db:deploy
+```
+
+Do not use `docker compose down -v` unless you intentionally want to delete the local PostgreSQL volume and all its data.
+
+See [API setup](apps/api/README.md) and [web setup](apps/web/README.md) for application-specific details.
 
 ## License
 

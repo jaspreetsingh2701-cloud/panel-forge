@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 
 type Tenant = { id: string; name: string; slug: string; role: string };
 type User = { id: string; email: string; displayName: string | null; emailVerifiedAt: string | null; tenants: Tenant[] };
@@ -32,6 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  // A refresh token is single-use. Share one in-flight rotation across callers
+  // (including React Strict Mode's repeated development effects).
+  const refreshPromiseRef = useRef<Promise<boolean> | null>(null);
 
   const loadProfile = useCallback(async (token: string) => {
     const headers = { Authorization: `Bearer ${token}` };
@@ -79,30 +82,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [loadProfile]);
 
-  const refreshSession = useCallback(async () => {
+  const refreshSession = useCallback(() => {
+    if (refreshPromiseRef.current) return refreshPromiseRef.current;
+
     setIsLoading(true);
-    try {
-      const response = await fetch('/api/v1/auth/refresh', {
-        method: 'POST', credentials: 'include', cache: 'no-store',
-      });
-      if (!response.ok) {
+    const refreshPromise = (async () => {
+      try {
+        const response = await fetch('/api/v1/auth/refresh', {
+          method: 'POST', credentials: 'include', cache: 'no-store',
+        });
+        if (!response.ok) {
+          setAccessToken(null);
+          setUser(null);
+          setTenants([]);
+          return false;
+        }
+        const result = await response.json() as { accessToken: string };
+        setAccessToken(result.accessToken);
+        await loadProfile(result.accessToken);
+        return true;
+      } catch {
         setAccessToken(null);
         setUser(null);
         setTenants([]);
         return false;
+      } finally {
+        setIsLoading(false);
       }
-      const result = await response.json() as { accessToken: string };
-      setAccessToken(result.accessToken);
-      await loadProfile(result.accessToken);
-      return true;
-    } catch {
-      setAccessToken(null);
-      setUser(null);
-      setTenants([]);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
+    })();
+
+    refreshPromiseRef.current = refreshPromise;
+    void refreshPromise.then(() => {
+      if (refreshPromiseRef.current === refreshPromise) {
+        refreshPromiseRef.current = null;
+      }
+    });
+    return refreshPromise;
   }, [loadProfile]);
 
   const logout = useCallback(async () => {

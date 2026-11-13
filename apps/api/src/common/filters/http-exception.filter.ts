@@ -5,12 +5,14 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import type { Request, Response } from 'express';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
   catch(exception: unknown, host: ArgumentsHost): void {
     const context = host.switchToHttp();
 
@@ -104,6 +106,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
             }
         }
       }
+    }
+
+    // Keep unexpected server failures diagnosable without exposing stack traces
+    // or database details to API consumers.
+    if (!(exception instanceof HttpException) || statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      const stack = exception instanceof Error ? exception.stack : String(exception);
+      this.logger.error(
+        `[${requestId}] ${request.method} ${request.url} failed`,
+        stack,
+      );
     }
 
     // Return a consistent response without exposing internal exceptions.
