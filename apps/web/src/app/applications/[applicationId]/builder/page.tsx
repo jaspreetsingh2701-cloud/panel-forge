@@ -48,8 +48,8 @@ export default function BuilderPage() {
           headers: { Authorization: 'Bearer ' + accessToken }, credentials: 'include', cache: 'no-store',
         });
         if (!response.ok) {
-          const payload = await response.json().catch(() => null) as { message?: string | string[] } | null;
-          throw new Error(Array.isArray(payload?.message) ? payload.message.join(' ') : payload?.message || 'Could not load this application.');
+          const payload = await response.json().catch(() => null) as { message?: string | string[]; error?: { message?: string | string[] } } | null;
+          throw new Error(Array.isArray(payload?.error?.message ?? payload?.message) ? (payload?.error?.message ?? payload?.message as string[]).join(' ') : payload?.error?.message ?? payload?.message ?? 'Could not load this application.');
         }
         const applications = await response.json() as Application[];
         const current = applications.find((item) => item.id === applicationId);
@@ -59,7 +59,7 @@ export default function BuilderPage() {
         });
         if (!builderResponse.ok) {
           const payload = await builderResponse.json().catch(() => null) as { message?: string | string[] } | null;
-          throw new Error(Array.isArray(payload?.message) ? payload.message.join(' ') : payload?.message || 'Could not restore the saved builder configuration.');
+          throw new Error(Array.isArray(payload?.error?.message ?? payload?.message) ? (payload?.error?.message ?? payload?.message as string[]).join(' ') : payload?.error?.message ?? payload?.message ?? 'Could not restore the saved builder configuration.');
         }
         const builderConfig = await builderResponse.json() as { components: BuilderComponent[]; updatedAt: string };
         const restoredComponents = Array.isArray(builderConfig.components) ? builderConfig.components : [];
@@ -101,7 +101,8 @@ export default function BuilderPage() {
       });
       const payload = await response.json().catch(() => null) as { message?: string | string[]; components?: BuilderComponent[]; updatedAt?: string } | null;
       if (!response.ok) {
-        const message = Array.isArray(payload?.message) ? payload.message.join(' ') : payload?.message || 'Could not save the builder configuration.';
+        const responseMessage = payload?.error?.message ?? payload?.message;
+        const message = Array.isArray(responseMessage) ? responseMessage.join(' ') : responseMessage || 'Could not save the builder configuration.';
         if (response.status === 409) setSaveConflict(true);
         throw new Error(message);
       }
