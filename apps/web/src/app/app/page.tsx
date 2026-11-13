@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 
 export default function AppDashboardPage() {
   const router = useRouter();
-  const { user, tenants, isLoading, refreshSession, logout } = useAuth();
+  const { user, tenants, accessToken, isLoading, refreshSession, logout } = useAuth();
+  const [applicationsCount, setApplicationsCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -19,6 +20,27 @@ export default function AppDashboardPage() {
       });
     }
   }, [user, refreshSession, router]);
+
+  useEffect(() => {
+    const tenant = tenants[0];
+    if (!user || !tenant || !accessToken) return;
+
+    let cancelled = false;
+    void fetch('/api/v1/tenants/' + tenant.id + '/applications', {
+      headers: { Authorization: 'Bearer ' + accessToken },
+      credentials: 'include',
+      cache: 'no-store',
+    }).then(async (response) => {
+      if (!response.ok) throw new Error('Could not load application count.');
+      return response.json() as Promise<unknown>;
+    }).then((applications) => {
+      if (!cancelled) setApplicationsCount(Array.isArray(applications) ? applications.length : 0);
+    }).catch(() => {
+      if (!cancelled) setApplicationsCount(null);
+    });
+
+    return () => { cancelled = true; };
+  }, [user, tenants, accessToken]);
 
   async function handleLogout() {
     await logout();
@@ -110,8 +132,8 @@ export default function AppDashboardPage() {
             <article className="metric-card">
               <span className="metric-icon">▦</span>
               <span className="metric-label">Applications</span>
-              <strong>0</strong>
-              <small>Ready when you are</small>
+              <strong>{applicationsCount === null ? '—' : applicationsCount}</strong>
+              <small>{applicationsCount === 1 ? '1 application in this workspace' : applicationsCount === null ? 'Application count unavailable' : applicationsCount + ' applications in this workspace'}</small>
             </article>
             <article className="metric-card">
               <span className="metric-icon metric-icon--cyan">⌘</span>
@@ -132,16 +154,33 @@ export default function AppDashboardPage() {
               <i />
               <b />
             </div>
-            <p className="eyebrow">YOUR FIRST APPLICATION</p>
-            <h2>Your workspace is ready for its first build.</h2>
-            <p>
-              Connect a data source, shape your resources and create an admin experience that fits
-              the way your team works.
-            </p>
-            <Link className="pf-button pf-button--primary" href="/applications">
-              Explore applications <span aria-hidden="true">→</span>
-            </Link>
-            <small>Start by creating an application in your workspace.</small>
+            {applicationsCount === 0 ? (
+              <>
+                <p className="eyebrow">YOUR FIRST APPLICATION</p>
+                <h2>Your workspace is ready for its first build.</h2>
+                <p>
+                  Create an application, define its resources and build an admin experience that fits
+                  the way your team works.
+                </p>
+                <Link className="pf-button pf-button--primary" href="/applications">
+                  Explore applications <span aria-hidden="true">→</span>
+                </Link>
+                <small>Start by creating an application in your workspace.</small>
+              </>
+            ) : (
+              <>
+                <p className="eyebrow">YOUR WORKSPACE</p>
+                <h2>Your applications are ready.</h2>
+                <p>
+                  {applicationsCount === null
+                    ? 'Open your application library to view and manage your workspace applications.'
+                    : 'You have ' + applicationsCount + (applicationsCount === 1 ? ' application' : ' applications') + ' in this workspace. Continue building or manage your application data.'}
+                </p>
+                <Link className="pf-button pf-button--primary" href="/applications">
+                  View applications <span aria-hidden="true">→</span>
+                </Link>
+              </>
+            )}
           </section>
           <footer className="dashboard-footer">
             PanelForge <span>·</span> Building the foundation, one layer at a time.
