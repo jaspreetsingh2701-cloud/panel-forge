@@ -75,6 +75,7 @@ export default function BuilderPage() {
   const [loadingResourceId, setLoadingResourceId] = useState<string | null>(null);
   const [bindingError, setBindingError] = useState('');
   const historyRef = useRef<{ past: BuilderComponent[][]; future: BuilderComponent[][]; previous: BuilderComponent[]; applying: boolean }>({ past: [], future: [], previous: [], applying: false });
+  const [, setHistoryRevision] = useState(0);
 
   useEffect(() => {
     if (!user) void refreshSession().then((authenticated) => { if (!authenticated) router.replace('/login'); });
@@ -200,8 +201,8 @@ export default function BuilderPage() {
 
 useEffect(() => {
   const history = historyRef.current;
-  if (history.applying) { history.applying = false; history.previous = components; return; }
-  if (stableSerialize(history.previous) !== stableSerialize(components)) { history.past = [...history.past, history.previous].slice(-50); history.future = []; history.previous = components; }
+  if (history.applying) { history.applying = false; history.previous = components; setHistoryRevision(revision => revision + 1); return; }
+  if (stableSerialize(history.previous) !== stableSerialize(components)) { history.past = [...history.past, history.previous].slice(-50); history.future = []; history.previous = components; setHistoryRevision(revision => revision + 1); }
 }, [components]);
 
 useEffect(() => {
@@ -230,7 +231,7 @@ function redo() {
 }
 
   async function saveConfiguration() {
-    if (!tenant || !accessToken || builderVersion === null || !canSave || !hasUnsavedChanges || isSaving) return;
+    if (!tenant || !accessToken || builderVersion === null || !canSave || !hasUnsavedChanges || isSaving || validationIssues.length > 0) return;
     setIsSaving(true);
     setSaveError('');
     setSaveConflict(false);
