@@ -312,3 +312,20 @@ footer span { color: var(--secondary); padding: 0 5px; }
 .builder-node-preview{cursor:pointer}
 .builder-interaction-status{max-width:1000px;min-height:18px;margin:5px auto 0;color:var(--secondary);font-size:10px}
 .builder-node-actions button:focus-visible,.builder-node-select:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+
+
+/* Phase 4.3 — responsive canvas layout primitives */
+.builder-canvas-components{grid-template-columns:repeat(12,minmax(0,1fr));align-items:start}
+.builder-canvas-node{min-width:0}
+.builder-canvas-node--width-full{grid-column:span 12}
+.builder-canvas-node--width-half{grid-column:span 6}
+.builder-canvas-node--width-third{grid-column:span 4}
+.builder-canvas-node--spacing-compact .builder-node-preview{padding:10px}
+.builder-canvas-node--spacing-comfortable .builder-node-preview{padding:18px}
+.builder-canvas-node--spacing-spacious .builder-node-preview{padding:28px}
+.builder-layout-controls{margin:22px 0 16px;padding-top:17px;border-top:1px solid var(--border)}
+.builder-layout-controls>.eyebrow{margin:0 0 14px;color:var(--secondary);font-size:9px;letter-spacing:1.2px}
+.builder-layout-controls .pf-input{width:100%;min-height:38px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:11px}
+.builder-layout-help{display:block;margin-top:4px;color:var(--muted);font-size:9px;line-height:1.5}
+@media(max-width:900px){.builder-canvas-node--width-third{grid-column:span 6}}
+@media(max-width:700px){.builder-canvas-components{grid-template-columns:minmax(0,1fr)}.builder-canvas-node--width-full,.builder-canvas-node--width-half,.builder-canvas-node--width-third{grid-column:1/-1}.builder-canvas-node--spacing-spacious .builder-node-preview{padding:18px}}
