@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AccessTokenGuard } from '../auth/guards/access-token.guard';
+import { AuthModule } from '../auth/auth.module';
 import { PlatformDocsController } from './platform-docs.controller';
 import { PlatformSuperAdminGuard } from './platform-super-admin.guard';
 
 @Module({
+  imports: [AuthModule],
   controllers: [PlatformDocsController],
-  providers: [AccessTokenGuard, PlatformSuperAdminGuard],
+  providers: [PlatformSuperAdminGuard],
 })
 export class PlatformModule {}
