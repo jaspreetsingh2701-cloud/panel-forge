@@ -111,38 +111,64 @@ API Swagger docs (development): [http://localhost:4000/api/v1/docs](http://local
 
 ### Common commands
 
-Run from the repository root:
+Run commands from the repository root unless noted otherwise.
 
-| Command | Purpose |
+**Code quality and builds**
+
+| Command | What it does |
 |---|---|
 | `pnpm lint` | Run ESLint across the repository |
-| `pnpm lint:fix` | Automatically fix supported ESLint issues |
-| `pnpm format` | Format repository files with Prettier |
-| `pnpm format:check` | Check formatting of the configured root files |
-| `pnpm typecheck` | Typecheck workspace packages and apps |
-| `pnpm build` | Build all workspace apps and packages |
+| `pnpm lint:fix` | Apply automatic ESLint fixes |
+| `pnpm format` | Format supported files with Prettier |
+| `pnpm format:check` | Check the root tooling/config files listed in the script |
+| `pnpm typecheck` | Typecheck all configured workspace projects |
+| `pnpm --filter @panelforge/api typecheck` | Typecheck the NestJS API |
+| `pnpm --filter @panelforge/web typecheck` | Generate Next.js route types and typecheck the web app |
+| `pnpm build` | Build all configured workspace projects |
+| `pnpm --filter @panelforge/api build` | Build the API |
+| `pnpm --filter @panelforge/web build` | Build the web app |
+
+**Tests**
+
+| Command | What it does |
+|---|---|
 | `pnpm --filter @panelforge/api test` | Run API unit tests |
-| `pnpm --filter @panelforge/api test:integration` | Run API integration tests |
-| `pnpm --filter @panelforge/api test:coverage` | Run API tests with coverage |
+| `pnpm --filter @panelforge/api test:integration` | Run API/PostgreSQL integration tests |
+| `pnpm --filter @panelforge/api test:coverage` | Run API unit tests with coverage |
 | `pnpm --filter @panelforge/web test` | Run web unit tests |
 | `pnpm --filter @panelforge/web test:coverage` | Run web unit tests with coverage |
 | `pnpm --filter @panelforge/web test:e2e` | Run Playwright end-to-end tests |
-| `pnpm --filter @panelforge/api db:generate` | Regenerate Prisma Client |
-| `pnpm --filter @panelforge/api db:status` | Check local migration status |
-| `pnpm --filter @panelforge/api db:deploy` | Apply committed migrations to the configured database |
-| `pnpm --filter @panelforge/api db:migrate --name <name>` | Create and apply a new development migration |
+
+**Database and Prisma migrations**
+
+| Command | When to use it |
+|---|---|
+| `docker compose up -d postgres` | Start the local PostgreSQL container |
+| `docker compose ps` | Check container and health status |
+| `pnpm --filter @panelforge/api db:generate` | Regenerate Prisma Client after schema changes |
+| `pnpm --filter @panelforge/api db:status` | Check whether local migrations are up to date |
+| `pnpm --filter @panelforge/api db:migrate --name add_applications` | Create and apply a new development migration |
+| `pnpm --filter @panelforge/api db:deploy` | Apply already-created/committed migrations |
 | `pnpm --filter @panelforge/api db:studio` | Open Prisma Studio |
 
-### Local database troubleshooting
+**Important migration workflow:** edit `apps/api/prisma/schema.prisma`, run `db:migrate --name <descriptive_name>` during development, and commit both the schema and generated migration folder. On another machine or CI/deployment environment, run `db:deploy` to apply those committed migrations. Use `db:status` to diagnose drift or pending migrations. Do not use `db:deploy` to create a new migration.
 
-If an API endpoint returns `500 INTERNAL_SERVER_ERROR`, first check the API terminal for the request ID and underlying Prisma/database error, then run:
+**If the API returns HTTP 500**
+
+1. Copy the response's `requestId`.
+2. Find the matching structured error entry in the API terminal output.
+3. Inspect `error.name`, `error.message`, `error.code` (when present) and `error.stacktrace`.
+4. Check database readiness and migration state:
 
 ```bash
+docker compose ps
 pnpm --filter @panelforge/api db:status
 pnpm --filter @panelforge/api db:deploy
 ```
 
-Do not use `docker compose down -v` unless you intentionally want to delete the local PostgreSQL volume and all its data.
+The API response deliberately does not include internal stack traces. The full trace is written to the API server log and correlated by `requestId`. Query strings, cookies and authorization headers are not included in the structured request log.
+
+**Database safety:** `docker compose down` stops/removes the container and network but keeps the named database volume. `docker compose down -v` deletes that volume and all local database data; only use it when you intentionally want a full local reset.
 
 See [API setup](apps/api/README.md) and [web setup](apps/web/README.md) for application-specific details.
 
