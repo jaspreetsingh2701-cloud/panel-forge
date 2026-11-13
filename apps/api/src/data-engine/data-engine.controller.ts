@@ -46,6 +46,14 @@ export class DataEngineController {
     return this.service.addField(r.user.userId, t, a, id, d);
   }
 
+  @Get('resources/:resourceId/aggregate')
+  @ApiOperation({ summary: 'Aggregate resource records for metrics and charts' })
+  @ApiParam({ name: 'resourceId', description: 'Resource UUID' })
+  @ApiResponse({ status: 200, description: 'Aggregated value and optional grouped chart series.' })
+  aggregate(@Req() r: AuthenticatedRequest, @Param('tenantId', new ParseUUIDPipe()) t: string, @Param('applicationId', new ParseUUIDPipe()) a: string, @Param('resourceId', new ParseUUIDPipe()) id: string, @Query() q: Record<string, string>) {
+    return this.service.aggregateRecords(r.user.userId, t, a, id, q);
+  }
+
   @Get('resources/:resourceId/records')
   @ApiOperation({ summary: 'List records for a resource' })
   @ApiParam({ name: 'resourceId', description: 'Resource UUID' })
