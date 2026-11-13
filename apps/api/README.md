@@ -78,7 +78,6 @@ Run from the repository root:
 | `pnpm --filter @panelforge/api build` | Build the API |
 | `pnpm --filter @panelforge/api start` | Run the compiled API |
 | `pnpm --filter @panelforge/api typecheck` | Run API TypeScript checks |
-| `pnpm --filter @panelforge/api lint` | Not configured; use root `pnpm lint` |
 | `pnpm --filter @panelforge/api test` | Run API unit tests |
 | `pnpm --filter @panelforge/api test:integration` | Run API integration tests |
 | `pnpm --filter @panelforge/api test:coverage` | Run API tests with coverage |
