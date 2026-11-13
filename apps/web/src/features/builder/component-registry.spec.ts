@@ -1,4 +1,4 @@
-import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, isBuilderComponentType, moveBuilderComponent } from './component-registry';
+import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, isBuilderComponentType, moveBuilderComponent, validateBuilderComponents } from './component-registry';
 describe('builder component registry', () => {
   it('exposes unique, allowlisted component identifiers', () => {
     const types = COMPONENT_REGISTRY.map((definition) => definition.type);
@@ -40,5 +40,25 @@ describe('builder component registry', () => {
     expect(moveBuilderComponent(items, -1, 1)).toEqual(items);
     expect(moveBuilderComponent(items, 0, 2)).toEqual(items);
     expect(moveBuilderComponent(items, 1, 1)).toEqual(items);
+  });
+});
+
+
+describe('builder configuration validation', () => {
+  it('requires a title and a resource for data components', () => {
+    const table = { ...createBuilderComponent('table', 'table-1'), title: '   ' };
+    expect(validateBuilderComponents([table], [])).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'title' }), expect.objectContaining({ field: 'resourceId' })]));
+  });
+  it('requires a numeric field for non-count aggregations', () => {
+    const metric = { ...createBuilderComponent('metric', 'metric-1'), dataBinding: { resourceId: 'resource-1', aggregation: 'sum' as const } };
+    expect(validateBuilderComponents([metric], ['resource-1'])).toEqual([expect.objectContaining({ field: 'field' })]);
+  });
+  it('rejects a selected field that is not numeric', () => {
+    const metric = { ...createBuilderComponent('metric', 'metric-1'), dataBinding: { resourceId: 'resource-1', aggregation: 'sum' as const, field: 'status' } };
+    expect(validateBuilderComponents([metric], ['resource-1'], [{ key: 'status', type: 'TEXT' }], 'metric-1')).toEqual([expect.objectContaining({ field: 'field', message: expect.stringContaining('NUMBER') })]);
+  });
+  it('accepts a valid resource-backed metric', () => {
+    const metric = { ...createBuilderComponent('metric', 'metric-1'), dataBinding: { resourceId: 'resource-1', aggregation: 'sum' as const, field: 'amount' } };
+    expect(validateBuilderComponents([metric], ['resource-1'], [{ key: 'amount', type: 'NUMBER' }], 'metric-1')).toEqual([]);
   });
 });
