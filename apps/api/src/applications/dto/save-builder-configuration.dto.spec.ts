@@ -80,6 +80,36 @@ describe('SaveBuilderConfigurationDto', () => {
     expect(errors.length).toBeGreaterThan(0);
   });
 
+  it('accepts resource bindings with selected columns and form mode', async () => {
+    const errors = await validatePayload({
+      expectedVersion: 0,
+      components: [{ ...component, type: 'table', dataBinding: {
+        resourceId: 'a17f3f8c-5a8d-4e45-9c4e-83a70f6bb5b4',
+        columns: ['name', 'status'],
+        mode: 'create',
+      } }],
+    });
+    expect(errors).toHaveLength(0);
+  });
+
+  it('rejects invalid resource ids, unsupported binding modes and malformed columns', async () => {
+    const errors = await validatePayload({
+      expectedVersion: 0,
+      components: [{ ...component, dataBinding: {
+        resourceId: 'not-a-uuid', columns: ['name', 42], mode: 'delete',
+      } }],
+    });
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('rejects unsupported binding properties', async () => {
+    const errors = await validatePayload({
+      expectedVersion: 0,
+      components: [{ ...component, dataBinding: { resourceId: null, rawQuery: 'DROP TABLE' } }],
+    });
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
   it('rejects negative or non-integer version tokens', async () => {
     const negative = await validatePayload({ expectedVersion: -1, components: [] });
     const fractional = await validatePayload({ expectedVersion: 1.5, components: [] });
