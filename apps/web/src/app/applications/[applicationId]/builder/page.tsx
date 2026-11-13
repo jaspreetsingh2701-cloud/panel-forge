@@ -16,7 +16,7 @@ function stableSerialize(value: unknown): string {
       .map(([key, entry]) => JSON.stringify(key) + ':' + stableSerialize(entry))
       .join(',') + '}';
   }
-  return JSON.stringify(value);
+  return JSON.stringify(value) ?? 'null';
 }
 
 const categories = Array.from(new Set(COMPONENT_REGISTRY.map((definition) => definition.category)));
