@@ -106,6 +106,57 @@ Run from the repository root:
 
 Use `db:migrate` to create a migration during development; use `db:deploy` to apply migrations that already exist. Do not edit generated migration SQL after it has been applied to a shared environment.
 
+## Inspect the local database with pgAdmin
+
+These steps are useful when Prisma reports that a table is missing even though `db:status` says all migrations are applied.
+
+### Open pgAdmin 4 on Windows
+
+1. Press the Windows key, search for **pgAdmin 4**, and open it. pgAdmin may open in a browser window.
+2. If prompted, enter the pgAdmin master password. This unlocks the saved server connections; it is not necessarily the PostgreSQL user's password.
+3. In the left **Browser** tree, expand **Servers** and select your local PostgreSQL server.
+4. Expand **Databases** and select **panelforge_test** (use the database name shown by `db:status`).
+5. Right-click that database and choose **Query Tool**.
+6. Paste the SQL checks below and click **Execute** (the ▶ button).
+
+If no local server is registered, right-click **Servers → Register → Server**:
+- **General → Name:** `PanelForge local` (any descriptive name is fine).
+- **Connection → Host name/address:** `localhost`.
+- **Port:** `5432`.
+- **Maintenance database:** `panelforge_test`.
+- **Username/password:** use the PostgreSQL credentials from the API's `DATABASE_URL` in `apps/api/.env`. Do not paste the full connection URL into the password field.
+
+If pgAdmin 4 is not installed, install it from [the official pgAdmin download page](https://www.pgadmin.org/download/), or use another PostgreSQL client.
+
+### Check the database and migration history
+
+Run these statements in Query Tool:
+
+```sql
+-- 1. Confirm which database, schema and user this connection is using.
+SELECT current_database(), current_schema(), current_user;
+
+-- 2. Check whether the applications table exists in any schema.
+SELECT table_schema, table_name
+FROM information_schema.tables
+WHERE table_name = 'applications'
+ORDER BY table_schema;
+
+-- 3. Inspect Prisma's migration history.
+SELECT
+    migration_name,
+    started_at,
+    finished_at,
+    rolled_back_at,
+    applied_steps_count
+FROM public."_prisma_migrations"
+ORDER BY started_at;
+```
+
+Compare the first query's database with the database reported by `pnpm --filter @panelforge/api db:status`. A migration row with a non-null `finished_at` means Prisma recorded that migration as applied; if its expected table is missing, investigate schema drift or a database/connection mismatch before changing anything.
+
+**Do not** delete `_prisma_migrations`, run `prisma migrate reset`, manually create tables, or run `prisma db push` as a first response. These actions can hide the underlying problem or risk local data. Share the query results and the matching API request ID when asking for help.
+
 ## Debugging API errors
 
 Every API error response includes an `error.requestId` and the response header `X-Request-Id`. For unexpected server errors, search the API terminal output for that ID. The structured JSON log includes:
