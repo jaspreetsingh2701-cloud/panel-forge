@@ -72,7 +72,7 @@ export default function BuilderPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [resourceFields, setResourceFields] = useState<ResourceField[]>([]);
   const [previewRecords, setPreviewRecords] = useState<ResourceRecord[]>([]);
-  const [isLoadingBinding, setIsLoadingBinding] = useState(false);
+  const [loadingResourceId, setLoadingResourceId] = useState<string | null>(null);
   const [bindingError, setBindingError] = useState('');
 
   useEffect(() => {
@@ -141,24 +141,25 @@ export default function BuilderPage() {
   const selectedDefinition = selectedComponent ? getBuilderComponentDefinition(selectedComponent.type) : undefined;
   const selectedIndex = selectedId ? components.findIndex((component) => component.id === selectedId) : -1;
   const selectedResourceId = selectedComponent?.dataBinding?.resourceId ?? null;
+  const selectedType = selectedComponent?.type ?? null;
+  const isLoadingBinding = Boolean(selectedResourceId && loadingResourceId === selectedResourceId);
 
   useEffect(() => {
-    if (!user || !tenant || !accessToken || !selectedResourceId || !selectedComponent || !['table', 'form'].includes(selectedComponent.type)) {
-      setResourceFields([]);
-      setPreviewRecords([]);
-      setIsLoadingBinding(false);
-      return;
-    }
+    if (!user || !tenant || !accessToken || !selectedResourceId || !selectedType || !['table', 'form'].includes(selectedType)) return;
     let cancelled = false;
-    setIsLoadingBinding(true);
-    setBindingError('');
     const base = '/api/v1/tenants/' + tenant.id + '/applications/' + applicationId + '/resources/' + selectedResourceId;
     const headers = { Authorization: 'Bearer ' + accessToken };
-    const fieldsRequest = fetch(base + '/fields', { headers, credentials: 'include', cache: 'no-store' });
-    const recordsRequest = selectedComponent.type === 'table'
-      ? fetch(base + '/records?page=1&pageSize=5', { headers, credentials: 'include', cache: 'no-store' })
-      : Promise.resolve(null);
-    Promise.all([fieldsRequest, recordsRequest]).then(async ([fieldsResponse, recordsResponse]) => {
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoadingResourceId(selectedResourceId);
+      const fieldsRequest = fetch(base + '/fields', { headers, credentials: 'include', cache: 'no-store' });
+      const recordsRequest = selectedType === 'table'
+        ? fetch(base + '/records?page=1&pageSize=5', { headers, credentials: 'include', cache: 'no-store' })
+        : Promise.resolve(null);
+      return Promise.all([fieldsRequest, recordsRequest]);
+    }).then(async (responses) => {
+      if (!responses || cancelled) return;
+      const [fieldsResponse, recordsResponse] = responses;
       if (!fieldsResponse.ok) throw new Error('Could not load fields for the selected resource.');
       const fields = await fieldsResponse.json() as ResourceField[];
       let records: ResourceRecord[] = [];
@@ -170,9 +171,9 @@ export default function BuilderPage() {
       if (!cancelled) { setResourceFields(fields); setPreviewRecords(records); }
     }).catch((loadError) => {
       if (!cancelled) { setResourceFields([]); setPreviewRecords([]); setBindingError(loadError instanceof Error ? loadError.message : 'Could not load resource data.'); }
-    }).finally(() => { if (!cancelled) setIsLoadingBinding(false); });
+    }).finally(() => { if (!cancelled) setLoadingResourceId(null); });
     return () => { cancelled = true; };
-  }, [user, tenant, accessToken, applicationId, selectedResourceId, selectedComponent?.type]);
+  }, [user, tenant, accessToken, applicationId, selectedResourceId, selectedType]);
 
   async function saveConfiguration() {
     if (!tenant || !accessToken || builderVersion === null || !canSave || !hasUnsavedChanges || isSaving) return;
