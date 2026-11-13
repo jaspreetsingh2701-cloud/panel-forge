@@ -351,3 +351,41 @@ footer span { color: var(--secondary); padding: 0 5px; }
 .builder-preview-table th,.builder-preview-table td{white-space:nowrap}
 
 .builder-validation-summary{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:0 0 14px;padding:11px 13px;border:1px solid color-mix(in srgb,#d97706 40%,var(--border));border-radius:10px;background:color-mix(in srgb,#d97706 7%,var(--surface));color:var(--text);font-size:11px}.builder-validation-summary span{color:var(--muted)}.builder-validation-indicator{color:#b45309;font-size:9px;font-weight:700;text-transform:uppercase}.builder-validation-error{display:block;margin-top:6px;color:#b45309;font-size:10px;line-height:1.45}.builder-inspector-actions{display:grid;gap:8px;margin-top:12px}.builder-inspector-actions .builder-remove-button{margin-top:0}
+
+
+/* Authenticated saved-application runtime */
+.runtime-content { max-width: 1440px; }
+.runtime-notice { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; padding: 14px 16px; margin: 24px 0; border: 1px solid color-mix(in srgb, var(--secondary) 35%, var(--border)); border-radius: 12px; background: color-mix(in srgb, var(--secondary) 7%, var(--surface)); font-size: 13px; }
+.runtime-notice strong { color: var(--secondary); }
+.runtime-notice span, .runtime-description, .runtime-empty, .runtime-footnote { color: var(--muted); }
+.runtime-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+.runtime-grid-item { min-width: 0; }
+.runtime-grid-item--full { grid-column: span 12; }
+.runtime-grid-item--half { grid-column: span 6; }
+.runtime-grid-item--third { grid-column: span 4; }
+.runtime-component { height: 100%; min-width: 0; padding: 22px; border: 1px solid var(--glass-border); border-radius: 16px; background: var(--glass); box-shadow: var(--shadow); }
+.runtime-component h2 { margin: 8px 0; font-size: 19px; letter-spacing: -.5px; }
+.runtime-component-type { margin: 0; color: var(--secondary); font-size: 10px; font-weight: 700; letter-spacing: 1.6px; }
+.runtime-description { margin: 7px 0 16px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+.runtime-text .runtime-description { color: var(--text); font-size: 15px; }
+.runtime-metric { display: flex; flex-direction: column; align-items: flex-start; }
+.runtime-metric-label { margin: 14px 0 4px; color: var(--muted); font-size: 14px; }
+.runtime-metric > strong { color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: clamp(30px, 4vw, 42px); letter-spacing: -1.5px; }
+.runtime-metric .runtime-description { margin-bottom: 0; }
+.runtime-table-scroll { overflow-x: auto; }
+.runtime-table table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+.runtime-table th, .runtime-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.runtime-table th { color: var(--muted); font-size: 11px; font-weight: 600; }
+.runtime-table td { color: var(--text); }
+.runtime-empty { padding: 14px; border: 1px dashed var(--border); border-radius: 10px; font-size: 13px; }
+.runtime-footnote { margin: 14px 0 0; font-size: 11px; }
+.runtime-bars { display: grid; gap: 12px; margin-top: 20px; }
+.runtime-bar-row { display: grid; grid-template-columns: minmax(70px, 1fr) minmax(80px, 3fr) auto; gap: 12px; align-items: center; font-size: 12px; }
+.runtime-bar-row > span { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+.runtime-bar-row > strong { min-width: 34px; text-align: right; }
+.runtime-bar-track { height: 9px; overflow: hidden; border-radius: 999px; background: var(--surface-elevated); }
+.runtime-bar-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
+.runtime-form-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; }
+.runtime-form .pf-input:disabled { opacity: .72; cursor: not-allowed; }
+@media (max-width: 900px) { .runtime-grid-item--third { grid-column: span 6; } }
+@media (max-width: 640px) { .runtime-grid-item--half, .runtime-grid-item--third { grid-column: span 12; } .runtime-form-fields { grid-template-columns: 1fr; } .runtime-component { padding: 17px; } }
