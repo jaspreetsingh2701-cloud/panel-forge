@@ -16,6 +16,8 @@ This directory is the canonical source of truth for product, architecture, data,
 | `07-project-management/` | Delivery and change tracking | Phase 0 baseline, roadmap, backlog, progress, documentation change log, versioning |
 | `adr/` | Architecture decisions | ADR-001 through ADR-006 and template |
 
+The repository Markdown files are also available in the authenticated PanelForge Documentation Centre. The catalogue and API Reference are currently restricted to platform Super Admins; document-level access policies for tenant roles will be introduced separately.
+
 ## Suggested reading order
 1. [Product definition](00-product/product-definition.md) and [MVP scope](00-product/mvp-scope.md).
 2. [Technology stack](01-architecture/technology-stack.md) and [system architecture](01-architecture/system-architecture.md).
