@@ -10,7 +10,7 @@ type DocumentationEntry = { id: string; title: string; category: string; path: s
 type DocumentationFile = DocumentationEntry & { content: string };
 
 function renderMarkdown(source: string): ReactNode[] {
-  const lines = source.split(/\\r?\\n/);
+  const lines = source.split(/\r?\n/);
   const output: ReactNode[] = [];
   let paragraph: string[] = [];
   let list: string[] = [];
@@ -19,17 +19,17 @@ function renderMarkdown(source: string): ReactNode[] {
   const flushParagraph = () => { if (paragraph.length) { output.push(<p key={output.length}>{paragraph.join(' ')}</p>); paragraph = []; } };
   const flushList = () => { if (list.length) { output.push(<ul key={output.length}>{list.map((item, index) => <li key={index}>{item}</li>)}</ul>); list = []; } };
   lines.forEach((line) => {
-    if (line.trim().startsWith('```')) { flushParagraph(); flushList(); if (inCode) output.push(<pre key={output.length}><code>{code.join('\\n')}</code></pre>); code = []; inCode = !inCode; return; }
+    if (line.trim().startsWith('```')) { flushParagraph(); flushList(); if (inCode) output.push(<pre key={output.length}><code>{code.join('\n')}</code></pre>); code = []; inCode = !inCode; return; }
     if (inCode) { code.push(line); return; }
-    const heading = /^(#{1,3})\\s+(.+)$/.exec(line);
+    const heading = /^(#{1,3})\s+(.+)$/.exec(line);
     if (heading) { flushParagraph(); flushList(); const level = heading[1].length; const text = heading[2]; output.push(level === 1 ? <h1 key={output.length}>{text}</h1> : level === 2 ? <h2 key={output.length}>{text}</h2> : <h3 key={output.length}>{text}</h3>); return; }
-    const item = /^\\s*[-*+]\\s+(.+)$/.exec(line);
+    const item = /^\s*[-*+]\s+(.+)$/.exec(line);
     if (item) { flushParagraph(); list.push(item[1]); return; }
     if (!line.trim()) { flushParagraph(); flushList(); return; }
     flushList(); paragraph.push(line.trim());
   });
   flushParagraph(); flushList();
-  if (inCode) output.push(<pre key={output.length}><code>{code.join('\\n')}</code></pre>);
+  if (inCode) output.push(<pre key={output.length}><code>{code.join('\n')}</code></pre>);
   return output;
 }
 
