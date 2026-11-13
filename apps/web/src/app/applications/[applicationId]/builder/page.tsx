@@ -69,12 +69,14 @@ export default function BuilderPage() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [interactionMessage, setInteractionMessage] = useState('');
   const [resources, setResources] = useState<Resource[]>([]);
+  const [resourcesLoaded, setResourcesLoaded] = useState(false);
   const [resourceFields, setResourceFields] = useState<ResourceField[]>([]);
   const [previewRecords, setPreviewRecords] = useState<ResourceRecord[]>([]);
   const [aggregatePreview, setAggregatePreview] = useState<ResourceAggregatePreview | null>(null);
   const [loadingResourceId, setLoadingResourceId] = useState<string | null>(null);
   const [bindingError, setBindingError] = useState('');
   const historyRef = useRef<{ past: BuilderComponent[][]; future: BuilderComponent[][]; previous: BuilderComponent[]; applying: boolean }>({ past: [], future: [], previous: [], applying: false });
+  const shortcutActionsRef = useRef<{ undo: () => void; redo: () => void; duplicateSelected: () => void; removeSelected: () => void } | null>(null);
   const [, setHistoryRevision] = useState(0);
 
   useEffect(() => {
@@ -132,14 +134,14 @@ export default function BuilderPage() {
     }).then(async (response) => {
       if (!response.ok) throw new Error('Could not load application resources.');
       return response.json() as Promise<Resource[]>;
-    }).then((items) => { if (!cancelled) setResources(Array.isArray(items) ? items : []); })
-      .catch((loadError) => { if (!cancelled) setBindingError(loadError instanceof Error ? loadError.message : 'Could not load resources.'); });
+    }).then((items) => { if (!cancelled) { setResources(Array.isArray(items) ? items : []); setResourcesLoaded(true); } })
+      .catch((loadError) => { if (!cancelled) { setResourcesLoaded(true); setBindingError(loadError instanceof Error ? loadError.message : 'Could not load resources.'); } });
     return () => { cancelled = true; };
   }, [user, tenant, accessToken, applicationId]);
 
   const hasUnsavedChanges = stableSerialize(components) !== stableSerialize(savedComponents);
   const canSave = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
-  const validationIssues = validateBuilderComponents(components, resources.map(resource => resource.id), resourceFields, selectedId);
+  const validationIssues = validateBuilderComponents(components, resources.map(resource => resource.id), resourceFields, selectedId, resourcesLoaded);
   const selectedValidationIssues = validationIssues.filter(issue => issue.componentId === selectedId);
   const canUndo = historyRef.current.past.length > 0;
   const canRedo = historyRef.current.future.length > 0;
@@ -209,14 +211,16 @@ useEffect(() => {
   const handleShortcut = (event: KeyboardEvent) => {
     const target = event.target as HTMLElement | null;
     if (target && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+    const actions = shortcutActionsRef.current;
+    if (!actions) return;
     const modifier = event.metaKey || event.ctrlKey;
-    if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) redo(); else undo(); }
-    else if (modifier && event.key.toLowerCase() === 'd') { event.preventDefault(); duplicateSelected(); }
-    else if (!modifier && (event.key === 'Delete' || event.key === 'Backspace') && selectedId) { event.preventDefault(); removeSelected(); }
+    if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) actions.redo(); else actions.undo(); }
+    else if (modifier && event.key.toLowerCase() === 'd') { event.preventDefault(); actions.duplicateSelected(); }
+    else if (!modifier && (event.key === 'Delete' || event.key === 'Backspace')) { event.preventDefault(); actions.removeSelected(); }
   };
   window.addEventListener('keydown', handleShortcut);
   return () => window.removeEventListener('keydown', handleShortcut);
-}, [selectedId, components]);
+}, []);
 
 function undo() {
   const history = historyRef.current; const previous = history.past.pop(); if (!previous) return;
@@ -341,6 +345,8 @@ function redo() {
     moveComponent(sourceIndex, targetIndex);
     setDraggedId(null);
   }
+
+  shortcutActionsRef.current = { undo, redo, duplicateSelected, removeSelected };
 
   if (!user) return <main className="app-loading page-shell"><p>{isLoading ? 'Restoring your session…' : 'Opening workspace…'}</p></main>;
   if (isLoadingApplication) return <main className="app-loading page-shell"><p>Loading application builder…</p></main>;

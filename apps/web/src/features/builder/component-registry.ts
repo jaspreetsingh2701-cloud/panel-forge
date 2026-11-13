@@ -65,7 +65,7 @@ export function validateBuilderComponents(components: readonly BuilderComponent[
     if (!['table', 'form', 'metric', 'chart'].includes(component.type)) continue;
     const resourceId = component.dataBinding?.resourceId;
     if (!resourceId) issues.push({ componentId: component.id, field: 'resourceId', message: 'Choose a resource before saving this data component.' });
-    else if (resourceIds.length > 0 && !resourceIds.includes(resourceId)) issues.push({ componentId: component.id, field: 'resourceId', message: 'This resource is no longer available in the application. Choose another resource.' });
+    else if (resourceListLoaded && !resourceIds.includes(resourceId)) issues.push({ componentId: component.id, field: 'resourceId', message: 'This resource is no longer available in the application. Choose another resource.' });
     if ((component.type === 'metric' || component.type === 'chart') && (component.dataBinding?.aggregation ?? 'count') !== 'count') {
       const field = component.dataBinding?.field;
       if (!field) issues.push({ componentId: component.id, field: 'field', message: 'Choose a numeric field for this aggregation.' });
