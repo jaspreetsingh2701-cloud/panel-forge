@@ -5,22 +5,11 @@ import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useAuth } from '@/components/auth/auth-provider';
 import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, moveBuilderComponent, type BuilderComponent, type BuilderComponentType, type BuilderPropertyKey, type BuilderLayoutWidth, type BuilderLayoutSpacing } from '@/features/builder/component-registry';
+import { stableSerialize } from '@/features/builder/stable-serialize';
 type Application = { id: string; name: string; description: string | null; status: 'DRAFT' | 'ARCHIVED' };
 type Resource = { id: string; name: string; key: string; _count?: { records: number; fields: number } };
 type ResourceField = { id: string; key: string; name: string; type: 'TEXT' | 'NUMBER' | 'BOOLEAN' | 'DATE' | 'SELECT' | 'RELATION'; required: boolean; options: string[] };
 type ResourceRecord = { id: string; data: Record<string, unknown>; updatedAt: string };
-
-// Compare persisted JSON data independent of object-key ordering (PostgreSQL JSONB may reorder keys).
-function stableSerialize(value: unknown): string {
-  if (Array.isArray(value)) return '[' + value.map(stableSerialize).join(',') + ']';
-  if (value !== null && typeof value === 'object') {
-    return '{' + Object.entries(value as Record<string, unknown>)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, entry]) => JSON.stringify(key) + ':' + stableSerialize(entry))
-      .join(',') + '}';
-  }
-  return JSON.stringify(value) ?? 'null';
-}
 
 const categories = Array.from(new Set(COMPONENT_REGISTRY.map((definition) => definition.category)));
 
