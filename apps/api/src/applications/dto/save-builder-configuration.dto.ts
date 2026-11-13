@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize, ArrayUnique, IsArray, IsDefined, IsInt, IsIn,
-  IsNotEmpty, IsString, IsUUID, MaxLength, Min, ValidateNested, IsOptional, ArrayUnique,
+  IsNotEmpty, IsString, IsUUID, MaxLength, Min, ValidateNested, IsOptional,
 } from 'class-validator';
 
 class BuilderLayoutDto {
