@@ -42,7 +42,7 @@ test.describe('login failure handling', () => {
 
     await page.goto('/login');
     await page.getByLabel('Work email').fill('invalid@example.com');
-    await page.getByLabel('Password').fill('incorrect-password');
+    await page.getByRole('textbox', { name: 'Password' }).fill('incorrect-password');
     await page.getByRole('button', { name: /sign in/i }).click();
 
     await expect(page.getByRole('alert')).toHaveText('Invalid email or password.');
