@@ -1,10 +1,10 @@
 'use client';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { useAuth } from '@/components/auth/auth-provider';
-import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, moveBuilderComponent, type BuilderComponent, type BuilderComponentType, type BuilderPropertyKey, type BuilderLayoutWidth, type BuilderLayoutSpacing } from '@/features/builder/component-registry';
+import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, moveBuilderComponent, validateBuilderComponents, type BuilderComponent, type BuilderComponentType, type BuilderPropertyKey, type BuilderLayoutWidth, type BuilderLayoutSpacing } from '@/features/builder/component-registry';
 import { stableSerialize } from '@/features/builder/stable-serialize';
 type Application = { id: string; name: string; description: string | null; status: 'DRAFT' | 'ARCHIVED' };
 type Resource = { id: string; name: string; key: string; _count?: { records: number; fields: number } };
@@ -74,6 +74,7 @@ export default function BuilderPage() {
   const [aggregatePreview, setAggregatePreview] = useState<ResourceAggregatePreview | null>(null);
   const [loadingResourceId, setLoadingResourceId] = useState<string | null>(null);
   const [bindingError, setBindingError] = useState('');
+  const historyRef = useRef<{ past: BuilderComponent[][]; future: BuilderComponent[][]; previous: BuilderComponent[]; applying: boolean }>({ past: [], future: [], previous: [], applying: false });
 
   useEffect(() => {
     if (!user) void refreshSession().then((authenticated) => { if (!authenticated) router.replace('/login'); });
@@ -137,6 +138,10 @@ export default function BuilderPage() {
 
   const hasUnsavedChanges = stableSerialize(components) !== stableSerialize(savedComponents);
   const canSave = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
+  const validationIssues = validateBuilderComponents(components, resources.map(resource => resource.id), resourceFields, selectedId);
+  const selectedValidationIssues = validationIssues.filter(issue => issue.componentId === selectedId);
+  const canUndo = historyRef.current.past.length > 0;
+  const canRedo = historyRef.current.future.length > 0;
   const selectedComponent = components.find((component) => component.id === selectedId) ?? null;
   const selectedDefinition = selectedComponent ? getBuilderComponentDefinition(selectedComponent.type) : undefined;
   const selectedIndex = selectedId ? components.findIndex((component) => component.id === selectedId) : -1;
@@ -193,6 +198,37 @@ export default function BuilderPage() {
     return () => { cancelled = true; };
   }, [user, tenant, accessToken, applicationId, selectedResourceId, selectedType, selectedAggregation, selectedAggregateField, selectedGroupBy]);
 
+useEffect(() => {
+  const history = historyRef.current;
+  if (history.applying) { history.applying = false; history.previous = components; return; }
+  if (stableSerialize(history.previous) !== stableSerialize(components)) { history.past = [...history.past, history.previous].slice(-50); history.future = []; history.previous = components; }
+}, [components]);
+
+useEffect(() => {
+  const handleShortcut = (event: KeyboardEvent) => {
+    const target = event.target as HTMLElement | null;
+    if (target && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+    const modifier = event.metaKey || event.ctrlKey;
+    if (modifier && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) redo(); else undo(); }
+    else if (modifier && event.key.toLowerCase() === 'd') { event.preventDefault(); duplicateSelected(); }
+    else if (!modifier && (event.key === 'Delete' || event.key === 'Backspace') && selectedId) { event.preventDefault(); removeSelected(); }
+  };
+  window.addEventListener('keydown', handleShortcut);
+  return () => window.removeEventListener('keydown', handleShortcut);
+}, [selectedId, components]);
+
+function undo() {
+  const history = historyRef.current; const previous = history.past.pop(); if (!previous) return;
+  history.future.push(components); history.applying = true; history.previous = previous; setComponents(previous);
+  setSelectedId(previous.find(item => item.id === selectedId)?.id ?? previous[previous.length - 1]?.id ?? null); setInteractionMessage('Last builder change undone.');
+}
+
+function redo() {
+  const history = historyRef.current; const next = history.future.pop(); if (!next) return;
+  history.past.push(components); history.applying = true; history.previous = next; setComponents(next);
+  setSelectedId(next.find(item => item.id === selectedId)?.id ?? next[next.length - 1]?.id ?? null); setInteractionMessage('Builder change restored.');
+}
+
   async function saveConfiguration() {
     if (!tenant || !accessToken || builderVersion === null || !canSave || !hasUnsavedChanges || isSaving) return;
     setIsSaving(true);
@@ -242,6 +278,13 @@ export default function BuilderPage() {
     setComponents((current) => [...current, component]);
     setSelectedId(component.id);
     setInteractionMessage(component.title + ' added to canvas.');
+  }
+  function duplicateSelected() {
+    if (!selectedComponent) return;
+    const copy = JSON.parse(JSON.stringify(selectedComponent)) as BuilderComponent;
+    copy.id = crypto.randomUUID(); copy.title = copy.title.trim() ? copy.title + ' copy' : 'Untitled component copy';
+    setComponents(current => { const index = current.findIndex(item => item.id === selectedComponent.id); const next = [...current]; next.splice(index + 1, 0, copy); return next; });
+    setSelectedId(copy.id); setInteractionMessage(copy.title + ' duplicated.');
   }
   function updateLayout(key: 'width' | 'spacing', value: BuilderLayoutWidth | BuilderLayoutSpacing) {
     if (!selectedComponent) return;
@@ -308,7 +351,9 @@ export default function BuilderPage() {
         <div className="builder-topbar-title"><Link className="brand" href="/applications" onClick={(event) => { if (hasUnsavedChanges && !window.confirm('You have unsaved builder changes. Leave without saving?')) event.preventDefault(); }}><span className="brand-mark">P</span><span>PanelForge</span></Link><span className="builder-topbar-divider">/</span><Link className="breadcrumb-muted" href={'/applications/' + applicationId + '/resources'} onClick={(event) => { if (hasUnsavedChanges && !window.confirm('You have unsaved builder changes. Leave without saving?')) event.preventDefault(); }}>{application.name}</Link><span className="builder-topbar-divider">/</span><strong>Builder</strong></div>
         <div className="builder-topbar-actions">
           <span className={'pf-badge ' + (hasUnsavedChanges ? 'pf-badge--warning' : 'pf-badge--success')}>{hasUnsavedChanges ? 'Unsaved changes' : 'Saved draft'}</span>
-          <button className="pf-button pf-button--primary pf-button--sm" type="button" onClick={() => void saveConfiguration()} disabled={!canSave || !hasUnsavedChanges || isSaving || builderVersion === null}>{isSaving ? 'Saving…' : 'Save changes'}</button>
+          <button className="pf-button pf-button--ghost pf-button--sm" type="button" onClick={undo} disabled={!canUndo} title="Undo (Ctrl/Cmd+Z)">Undo</button>
+          <button className="pf-button pf-button--ghost pf-button--sm" type="button" onClick={redo} disabled={!canRedo} title="Redo (Ctrl/Cmd+Shift+Z)">Redo</button>
+          <button className="pf-button pf-button--primary pf-button--sm" type="button" onClick={() => void saveConfiguration()} disabled={!canSave || !hasUnsavedChanges || isSaving || builderVersion === null || validationIssues.length > 0}>{isSaving ? 'Saving…' : 'Save changes'}</button>
           <ThemeToggle />
         </div>
       </header>
@@ -319,10 +364,11 @@ export default function BuilderPage() {
           {categories.map((category) => <section className="builder-palette-group" key={category}><h3>{category}</h3><div className="builder-component-list">
             {COMPONENT_REGISTRY.filter((definition) => definition.category === category).map((definition) => <button className="builder-component-option" key={definition.type} type="button" onClick={() => addComponent(definition.type)}><span className="builder-component-icon" aria-hidden="true">{definition.icon}</span><span><strong>{definition.label}</strong><small>{definition.description}</small></span><span className="builder-component-add" aria-hidden="true">＋</span></button>)}
           </div></section>)}
-          <p className="builder-palette-note">Only registered component types can be added. More layout and data components arrive in the next builder batches.</p>
+          <p className="builder-palette-note">Only registered component types can be added. Configure data bindings in Properties before saving.</p>
         </aside>
         <section className="builder-canvas-area" aria-label="Page canvas">
           <div className="builder-canvas-toolbar"><div><p className="eyebrow">PAGE 01</p><h1>{application.name}</h1></div><span className="pf-badge">Canvas preview</span></div>
+          {validationIssues.length > 0 && <div className="builder-validation-summary" role="status"><strong>{validationIssues.length} configuration issue{validationIssues.length === 1 ? '' : 's'}</strong><span>Resolve the highlighted component settings before saving.</span></div>}
           <div className="builder-canvas-board">
             {components.length === 0 ? <div className="builder-canvas-empty"><span className="builder-empty-icon">＋</span><h2>Your canvas is ready.</h2><p>Add a component from the left panel to start shaping this page.</p></div> : <div className="builder-canvas-components">
               {components.map((component, index) => <article
@@ -338,13 +384,14 @@ export default function BuilderPage() {
                     <button className="builder-reorder-button" type="button" aria-label={'Move ' + component.title + ' down'} title="Move down" disabled={index === components.length - 1} onClick={() => moveComponent(index, index + 1)}>↓</button>
                     <button className="builder-drag-handle" type="button" draggable="true" aria-label={'Drag to reorder ' + component.title} title="Drag to reorder" onDragStart={() => { setDraggedId(component.id); setSelectedId(component.id); }} onDragEnd={() => setDraggedId(null)}>⠿</button>
                   </div>
+                  {validationIssues.some(issue => issue.componentId === component.id) && <span className="builder-validation-indicator" title="This component needs configuration">Needs setup</span>}
                   {component.id === selectedId && <span className="builder-selected-label">Selected</span>}
                 </div>
                 <div className="builder-node-preview" onClick={() => setSelectedId(component.id)}><ComponentPreview component={component} fields={component.id === selectedId ? resourceFields : []} records={component.id === selectedId ? previewRecords : []} aggregate={component.id === selectedId ? aggregatePreview : null} isLoadingBinding={component.id === selectedId && isLoadingBinding} /></div>
               </article>)}
             </div>}
           </div>
-          <p className="builder-canvas-footnote">Reorder with the arrow controls or drag handle. Changes are saved to the application draft configuration; publishing is not available yet.</p>
+          <p className="builder-canvas-footnote">Reorder with the arrow controls or drag handle. Shortcuts: Ctrl/Cmd+Z undo · Ctrl/Cmd+Shift+Z redo · Ctrl/Cmd+D duplicate · Delete remove. Changes are saved to the application draft configuration; publishing is not available yet.</p>
           {saveError && <p className="application-error builder-error" role="alert">{saveError} {saveConflict && <button className="pf-button pf-button--ghost pf-button--sm" type="button" onClick={() => window.location.reload()}>Reload saved version</button>}</p>}
           {saveMessage && !hasUnsavedChanges && <p className="builder-save-message" role="status">{saveMessage}</p>}
           {!canSave && hasUnsavedChanges && <p className="builder-save-message" role="status">Only workspace owners and admins can save application changes.</p>}
@@ -354,7 +401,7 @@ export default function BuilderPage() {
           <div className="builder-panel-heading"><p className="eyebrow">CONFIGURE</p><h2>Properties</h2><p>{selectedComponent ? 'Edit the selected component.' : 'Select a component on the canvas.'}</p></div>
           {!selectedComponent || !selectedDefinition ? <div className="builder-inspector-empty"><span>◇</span><p>No component selected</p><small>Choose a component on the canvas to inspect its properties.</small></div> : <>
             <div className="builder-inspector-type"><span className="builder-component-icon">{selectedDefinition.icon}</span><span><strong>{selectedDefinition.label}</strong><small>{selectedDefinition.type}</small></span></div>
-            {selectedDefinition.properties.map((property) => <label className="pf-field builder-property-field" key={property.key}><span className="pf-label">{property.label}</span>{property.control === 'textarea' ? <textarea className="pf-input builder-property-textarea" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} /> : <input className="pf-input" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} />}</label>)}
+            {selectedDefinition.properties.map((property) => <label className="pf-field builder-property-field" key={property.key}><span className="pf-label">{property.label}</span>{property.control === 'textarea' ? <textarea className="pf-input builder-property-textarea" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} /> : <input className="pf-input" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} />}{property.key === 'title' && selectedValidationIssues.filter(issue => issue.field === 'title').map(issue => <small className="builder-validation-error" key={issue.field}>{issue.message}</small>)}</label>)}
             {(selectedComponent.type === 'table' || selectedComponent.type === 'form' || selectedComponent.type === 'metric' || selectedComponent.type === 'chart') && <div className="builder-data-binding-controls">
               <p className="eyebrow">DATA SOURCE</p>
               <label className="pf-field builder-property-field"><span className="pf-label">Resource</span>
@@ -393,6 +440,7 @@ export default function BuilderPage() {
                 <select className="pf-input" value={selectedComponent.dataBinding?.mode ?? 'create'} onChange={(event) => updateDataBinding('mode', event.target.value)}><option value="create">Create record</option><option value="edit">Edit record</option></select>
               </label>}
               <small className="builder-layout-help">Metric cards and charts calculate values from up to 500 recent records. Form submission and record editing will be enabled in the application runtime phase.</small>
+              {selectedValidationIssues.filter(issue => issue.field !== 'title').map(issue => <p className="builder-validation-error" role="alert" key={issue.field}>{issue.message}</p>)}
               {bindingError && <p className="application-error" role="alert">{bindingError}</p>}
             </div>}
             <div className="builder-layout-controls">
@@ -401,7 +449,7 @@ export default function BuilderPage() {
               <label className="pf-field builder-property-field"><span className="pf-label">Content spacing</span><select className="pf-input" value={selectedComponent.layout.spacing} onChange={(event) => updateLayout('spacing', event.target.value as BuilderLayoutSpacing)}><option value="compact">Compact</option><option value="comfortable">Comfortable</option><option value="spacious">Spacious</option></select></label>
               <small className="builder-layout-help">Columns automatically stack on smaller screens.</small>
             </div>
-            <button className="pf-button pf-button--danger builder-remove-button" type="button" onClick={removeSelected}>Remove component</button>
+            <div className="builder-inspector-actions"><button className="pf-button pf-button--ghost builder-duplicate-button" type="button" onClick={duplicateSelected}>Duplicate component</button><button className="pf-button pf-button--danger builder-remove-button" type="button" onClick={removeSelected}>Remove component</button></div>
           </>}
         </aside>
       </div>
