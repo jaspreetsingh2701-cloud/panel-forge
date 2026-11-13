@@ -108,7 +108,6 @@ export default function BuilderPage() {
       if (!payload || !Array.isArray(payload.components) || !payload.updatedAt) {
         throw new Error('The server returned an invalid save response. Reload the builder before continuing.');
       }
-      setComponents(payload.components);
       setSavedComponents(payload.components);
       setBuilderUpdatedAt(payload.updatedAt);
       setSaveMessage('All changes saved.');
@@ -179,7 +178,7 @@ export default function BuilderPage() {
   return (
     <main className="builder-page">
       <header className="builder-topbar">
-        <div className="builder-topbar-title"><Link className="brand" href="/applications"><span className="brand-mark">P</span><span>PanelForge</span></Link><span className="builder-topbar-divider">/</span><Link className="breadcrumb-muted" href={'/applications/' + applicationId + '/resources'}>{application.name}</Link><span className="builder-topbar-divider">/</span><strong>Builder</strong></div>
+        <div className="builder-topbar-title"><Link className="brand" href="/applications" onClick={(event) => { if (hasUnsavedChanges && !window.confirm('You have unsaved builder changes. Leave without saving?')) event.preventDefault(); }}><span className="brand-mark">P</span><span>PanelForge</span></Link><span className="builder-topbar-divider">/</span><Link className="breadcrumb-muted" href={'/applications/' + applicationId + '/resources'} onClick={(event) => { if (hasUnsavedChanges && !window.confirm('You have unsaved builder changes. Leave without saving?')) event.preventDefault(); }}>{application.name}</Link><span className="builder-topbar-divider">/</span><strong>Builder</strong></div>
         <div className="builder-topbar-actions">
           <span className={'pf-badge ' + (hasUnsavedChanges ? 'pf-badge--warning' : 'pf-badge--success')}>{hasUnsavedChanges ? 'Unsaved changes' : 'Saved draft'}</span>
           <button className="pf-button pf-button--primary pf-button--sm" type="button" onClick={() => void saveConfiguration()} disabled={!canSave || !hasUnsavedChanges || isSaving || !builderUpdatedAt}>{isSaving ? 'Saving…' : 'Save changes'}</button>
