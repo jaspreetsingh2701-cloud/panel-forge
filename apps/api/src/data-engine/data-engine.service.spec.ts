@@ -1,0 +1,11 @@
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { DataEngineService } from './data-engine.service';
+describe('DataEngineService',()=>{
+ const prisma={tenantMember:{findFirst:jest.fn()},application:{findFirst:jest.fn()},resource:{findFirst:jest.fn(),findMany:jest.fn(),create:jest.fn()},resourceField:{findMany:jest.fn(),create:jest.fn()},dynamicRecord:{findMany:jest.fn(),findFirst:jest.fn(),create:jest.fn(),update:jest.fn(),deleteMany:jest.fn()}};
+ let service:DataEngineService;
+ beforeEach(()=>{jest.clearAllMocks();service=new DataEngineService(prisma as never);prisma.tenantMember.findFirst.mockResolvedValue({role:'OWNER'});prisma.application.findFirst.mockResolvedValue({id:'app'});});
+ it('denies resource writes to a regular member',async()=>{prisma.tenantMember.findFirst.mockResolvedValue({role:'MEMBER'});await expect(service.createResource('u','t','a',{name:'Contacts',key:'contacts'})).rejects.toBeInstanceOf(ForbiddenException);});
+ it('rejects resources outside the active tenant application',async()=>{prisma.application.findFirst.mockResolvedValue(null);await expect(service.listResources('u','t','a')).rejects.toThrow('Application not found.');});
+ it('validates required fields and rejects unknown data keys',async()=>{prisma.resource.findFirst.mockResolvedValue({id:'r',fields:[]});prisma.resourceField.findMany.mockResolvedValue([{key:'email',name:'Email',type:'TEXT',required:true,options:[],relationResourceId:null}]);await expect(service.createRecord('u','t','a','r',{unknown:'x'})).rejects.toBeInstanceOf(BadRequestException);await expect(service.createRecord('u','t','a','r',{})).rejects.toBeInstanceOf(BadRequestException);});
+ it('creates records only after validating field types',async()=>{prisma.resource.findFirst.mockResolvedValue({id:'r',fields:[]});prisma.resourceField.findMany.mockResolvedValue([{key:'count',name:'Count',type:'NUMBER',required:true,options:[],relationResourceId:null}]);prisma.dynamicRecord.create.mockResolvedValue({id:'rec',data:{count:3}});await expect(service.createRecord('u','t','a','r',{count:3})).resolves.toEqual({id:'rec',data:{count:3}});});
+});

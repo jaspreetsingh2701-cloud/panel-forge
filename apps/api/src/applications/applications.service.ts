@@ -23,8 +23,18 @@ export class ApplicationsService {
     });
   }
 
+  private async assertTenantManager(userId: string, tenantId: string): Promise<void> {
+    const membership = await this.prisma.tenantMember.findFirst({
+      where: { userId, tenantId, status: 'ACTIVE', tenant: { status: 'ACTIVE' } },
+      select: { role: true },
+    });
+    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+      throw new ForbiddenException('Only workspace owners and admins can manage applications.');
+    }
+  }
+
   async create(userId: string, tenantId: string, dto: CreateApplicationDto) {
-    await this.assertTenantAccess(userId, tenantId);
+    await this.assertTenantManager(userId, tenantId);
     return this.prisma.application.create({
       data: { tenantId, name: dto.name.trim(), description: dto.description?.trim() || null, template: dto.template ?? 'blank' },
       select: { id: true, name: true, description: true, template: true, status: true, createdAt: true, updatedAt: true },
@@ -32,7 +42,7 @@ export class ApplicationsService {
   }
 
   async archive(userId: string, tenantId: string, applicationId: string) {
-    await this.assertTenantAccess(userId, tenantId);
+    await this.assertTenantManager(userId, tenantId);
     const result = await this.prisma.application.updateMany({
       where: { id: applicationId, tenantId, status: 'DRAFT' },
       data: { status: 'ARCHIVED' },

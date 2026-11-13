@@ -103,6 +103,7 @@ export default function ApplicationsPage() {
 
   if (!user) return <main className="app-loading page-shell"><span className="brand-mark">P</span><p>{isLoading ? 'Restoring your session…' : 'Opening your workspace…'}</p></main>;
   const greeting = user.displayName || user.email;
+  const canManage = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
 
   return (
     <main className="app-shell">
@@ -114,14 +115,14 @@ export default function ApplicationsPage() {
           <Link className="sidebar-link" href="/app"><span>▦</span> Overview</Link>
           <Link className="sidebar-link sidebar-link--active" href="/applications" aria-current="page"><span>◫</span> Applications</Link>
           <a className="sidebar-link sidebar-link--disabled" href="#data-sources"><span>⌘</span> Data sources <span className="pf-badge">Coming soon</span></a>
-          <a className="sidebar-link sidebar-link--disabled" href="#members"><span>♧</span> Members <span className="pf-badge">Coming soon</span></a>
+          <a className="sidebar-link" href="/members"><span>♧</span> Members <span className="pf-badge">Coming soon</span></a>
         </nav>
         <div className="sidebar-bottom"><p className="sidebar-label">ACCOUNT</p><div className="account-mini"><span className="user-avatar">{greeting.slice(0, 1).toUpperCase()}</span><span><strong>{greeting}</strong><small>{user.email}</small></span></div></div>
       </aside>
       <section className="app-main">
         <header className="app-topbar"><div><Link className="breadcrumb-muted" href="/app">Workspace</Link><span className="breadcrumb-divider">/</span><strong>Applications</strong></div><div className="app-top-actions"><span className="topbar-user">{user.email}</span><ThemeToggle /></div></header>
         <div className="dashboard-content">
-          <div className="applications-heading"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>Applications <span>library.</span></h1><p>Build and organise the admin experiences your team relies on.</p></div><button className="pf-button pf-button--primary" type="button" onClick={() => setIsCreating(true)}>＋ New application</button></div>
+          <div className="applications-heading"><div><p className="eyebrow">YOUR WORKSPACE</p><h1>Applications <span>library.</span></h1><p>Build and organise the admin experiences your team relies on.</p></div>{canManage && <button className="pf-button pf-button--primary" type="button" onClick={() => setIsCreating(true)}>＋ New application</button>}</div>
           <div className="applications-toolbar"><div><strong>{applications.length}</strong> {applications.length === 1 ? 'application' : 'applications'} <span>·</span> {tenant?.name ?? 'Workspace'}</div><span className="pf-badge pf-badge--info">Saved to workspace</span></div>
           {error && <p className="application-error" role="alert">{error}</p>}
           {isLoadingApplications ? <section className="applications-empty"><p>Loading your applications…</p></section> : applications.length === 0 ? (
@@ -132,8 +133,8 @@ export default function ApplicationsPage() {
                 <div className="application-card-top"><span className="application-icon">◫</span><span className="pf-badge pf-badge--warning">Draft</span></div>
                 <h2>{application.name}</h2><p>{application.description || 'No description added yet.'}</p>
                 <div className="application-card-meta"><span>{templates.find((item) => item.id === application.template)?.name ?? 'Custom application'}</span><span>Created {new Date(application.createdAt).toLocaleDateString()}</span></div>
-                <button className="pf-button pf-button--ghost pf-button--sm" type="button" disabled>Open builder <span aria-hidden="true">→</span></button>
-                <button className="application-archive" type="button" onClick={() => void archiveApplication(application.id)}>Archive</button>
+                <Link className="pf-button pf-button--ghost pf-button--sm" href={`/applications/${application.id}/resources`}>Manage data <span aria-hidden="true">→</span></Link>
+                {canManage && <button className="application-archive" type="button" onClick={() => void archiveApplication(application.id)}>Archive</button>}
               </article>
             ))}</div>
           )}
