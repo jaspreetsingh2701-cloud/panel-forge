@@ -1,0 +1,34 @@
+export type BuilderComponentType = 'text' | 'metric' | 'table' | 'form' | 'chart';
+export type BuilderPropertyKey = 'title' | 'description' | 'content';
+export type BuilderComponent = { id: string; type: BuilderComponentType; title: string; description: string; content: string };
+export type BuilderComponentDefinition = {
+  type: BuilderComponentType; label: string; category: 'Content' | 'Data'; description: string; icon: string;
+  defaults: Omit<BuilderComponent, 'id' | 'type'>;
+  properties: ReadonlyArray<{ key: BuilderPropertyKey; label: string; control: 'input' | 'textarea' }>;
+};
+export const COMPONENT_REGISTRY = [
+  { type: 'text', label: 'Text block', category: 'Content', description: 'Add a heading and supporting copy.', icon: 'T',
+    defaults: { title: 'Welcome to your workspace', description: 'A short introduction for your team.', content: 'Use this space to explain what this page is for.' },
+    properties: [{ key: 'title', label: 'Heading', control: 'input' }, { key: 'content', label: 'Body text', control: 'textarea' }] },
+  { type: 'metric', label: 'Metric card', category: 'Data', description: 'Highlight one important number.', icon: '↗',
+    defaults: { title: 'Total orders', description: 'Example metric · data binding comes next', content: '128' },
+    properties: [{ key: 'title', label: 'Metric label', control: 'input' }, { key: 'description', label: 'Supporting text', control: 'input' }, { key: 'content', label: 'Preview value', control: 'input' }] },
+  { type: 'table', label: 'Data table', category: 'Data', description: 'Preview a resource-backed table layout.', icon: '▤',
+    defaults: { title: 'Recent records', description: 'A preview of a resource table.', content: 'Connect a resource in the next builder step.' },
+    properties: [{ key: 'title', label: 'Table title', control: 'input' }, { key: 'description', label: 'Supporting text', control: 'input' }] },
+  { type: 'form', label: 'Form', category: 'Data', description: 'Create a form from a resource schema.', icon: '☷',
+    defaults: { title: 'Create a record', description: 'A preview of a resource-backed form.', content: 'Choose a resource to generate fields.' },
+    properties: [{ key: 'title', label: 'Form title', control: 'input' }, { key: 'description', label: 'Supporting text', control: 'input' }] },
+  { type: 'chart', label: 'Chart', category: 'Data', description: 'Reserve space for a data visualisation.', icon: '▥',
+    defaults: { title: 'Orders over time', description: 'Chart preview · data binding comes next', content: 'Connect a resource and metric in a later step.' },
+    properties: [{ key: 'title', label: 'Chart title', control: 'input' }, { key: 'description', label: 'Supporting text', control: 'input' }] },
+] as const satisfies ReadonlyArray<BuilderComponentDefinition>;
+export function getBuilderComponentDefinition(type: string) { return COMPONENT_REGISTRY.find((definition) => definition.type === type); }
+export function isBuilderComponentType(value: unknown): value is BuilderComponentType {
+  return typeof value === 'string' && COMPONENT_REGISTRY.some((definition) => definition.type === value);
+}
+export function createBuilderComponent(type: BuilderComponentType, id: string): BuilderComponent {
+  const definition = getBuilderComponentDefinition(type);
+  if (!definition) throw new Error('Unsupported builder component type.');
+  return { id, type: definition.type, ...definition.defaults };
+}

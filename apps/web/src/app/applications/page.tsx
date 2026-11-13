@@ -133,6 +133,7 @@ export default function ApplicationsPage() {
                 <div className="application-card-top"><span className="application-icon">◫</span><span className="pf-badge pf-badge--warning">Draft</span></div>
                 <h2>{application.name}</h2><p>{application.description || 'No description added yet.'}</p>
                 <div className="application-card-meta"><span>{templates.find((item) => item.id === application.template)?.name ?? 'Custom application'}</span><span>Created {new Date(application.createdAt).toLocaleDateString()}</span></div>
+                <Link className="pf-button pf-button--primary pf-button--sm" href={'/applications/' + application.id + '/builder'}>Open builder <span aria-hidden="true">→</span></Link>
                 <Link className="pf-button pf-button--ghost pf-button--sm" href={`/applications/${application.id}/resources`}>Manage data <span aria-hidden="true">→</span></Link>
                 {canManage && <button className="application-archive" type="button" onClick={() => void archiveApplication(application.id)}>Archive</button>}
               </article>

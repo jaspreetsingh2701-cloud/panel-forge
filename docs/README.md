@@ -10,7 +10,7 @@ This directory is the canonical source of truth for product, architecture, data,
 | `01-architecture/` | System design and security | Technology stack, system architecture, engine contracts, security and tenant isolation |
 | `02-database/` | Persistence and data integrity | Data model and storage, logical ERD |
 | `03-engines/` | Detailed engine specifications | To be added with implementation design |
-| `04-features/` | User-facing feature specifications | To be added before corresponding feature implementation |
+| `04-features/` | User-facing feature specifications | [Visual builder](04-features/visual-builder.md) |
 | `05-api/` | API contract conventions | API conventions |
 | `06-operations/` | Quality and production operations | Testing strategy, deployment and CI/CD |
 | `07-project-management/` | Delivery and change tracking | Phase 0 baseline, roadmap, backlog, progress, documentation change log, versioning |
