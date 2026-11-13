@@ -18,9 +18,9 @@ describe('PostgreSQL integration', () => {
       FROM information_schema.columns
       WHERE table_schema = 'public'
         AND table_name = 'applications'
-        AND column_name = 'page_config'
+        AND column_name IN ('page_config', 'builder_version')
     `;
-    expect(columns).toEqual([{ column_name: 'page_config' }]);
+    expect(columns.map((column) => column.column_name).sort()).toEqual(['builder_version', 'page_config']);
   });
 
 });
