@@ -26,7 +26,7 @@ export default function BuilderPage() {
   const [error, setError] = useState('');
   const [components, setComponents] = useState<BuilderComponent[]>([]);
   const [savedComponents, setSavedComponents] = useState<BuilderComponent[]>([]);
-  const [builderVersion, setBuilderUpdatedAt] = useState<number | null>(null);
+  const [builderVersion, setBuilderVersion] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveConflict, setSaveConflict] = useState(false);
@@ -69,7 +69,7 @@ export default function BuilderPage() {
           setApplication(current);
           setComponents(restoredComponents);
           setSavedComponents(restoredComponents);
-          setBuilderUpdatedAt(builderConfig.version);
+          setBuilderVersion(builderConfig.version);
           setError('');
         }
       } catch (loadError) {
@@ -112,7 +112,7 @@ export default function BuilderPage() {
         throw new Error('The server returned an invalid save response. Reload the builder before continuing.');
       }
       setSavedComponents(payload.components);
-      setBuilderUpdatedAt(payload.version);
+      setBuilderVersion(payload.version);
       setSaveMessage('All changes saved.');
       setInteractionMessage('Builder configuration saved.');
     } catch (saveError) {
