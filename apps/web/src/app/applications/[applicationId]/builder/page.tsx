@@ -10,11 +10,12 @@ type Application = { id: string; name: string; description: string | null; statu
 type Resource = { id: string; name: string; key: string; _count?: { records: number; fields: number } };
 type ResourceField = { id: string; key: string; name: string; type: 'TEXT' | 'NUMBER' | 'BOOLEAN' | 'DATE' | 'SELECT' | 'RELATION'; required: boolean; options: string[] };
 type ResourceRecord = { id: string; data: Record<string, unknown>; updatedAt: string };
+type ResourceAggregatePreview = { operation: string; value: number; groups: { label: string; value: number }[]; scanned: number; scanLimit: number };
 
 const categories = Array.from(new Set(COMPONENT_REGISTRY.map((definition) => definition.category)));
 
-function ComponentPreview({ component, fields = [], records = [], isLoadingBinding = false }: { component: BuilderComponent; fields?: ResourceField[]; records?: ResourceRecord[]; isLoadingBinding?: boolean }) {
-  if (component.type === 'metric') return <div className="builder-preview-metric"><span>{component.title}</span><strong>{component.content || '—'}</strong><small>{component.description}</small></div>;
+function ComponentPreview({ component, fields = [], records = [], aggregate = null, isLoadingBinding = false }: { component: BuilderComponent; fields?: ResourceField[]; records?: ResourceRecord[]; aggregate?: ResourceAggregatePreview | null; isLoadingBinding?: boolean }) {
+  if (component.type === 'metric') return <div className="builder-preview-metric"><span>{component.title}</span><strong>{component.dataBinding?.resourceId ? (isLoadingBinding ? '…' : aggregate ? new Intl.NumberFormat().format(aggregate.value) : '—') : component.content || '—'}</strong><small>{component.description}{component.dataBinding?.resourceId ? ' · ' + (component.dataBinding.aggregation ?? 'count') + ' of connected records' : ''}</small></div>;
   if (component.type === 'table') {
     const selectedColumns = Array.isArray(component.dataBinding?.columns) ? component.dataBinding.columns : fields.slice(0, 3).map((field) => field.key);
     const visibleFields = fields.filter((field) => selectedColumns.includes(field.key));
@@ -36,7 +37,16 @@ function ComponentPreview({ component, fields = [], records = [], isLoadingBindi
         : <input className="pf-input" disabled type={field.type === 'NUMBER' ? 'number' : field.type === 'DATE' ? 'date' : 'text'} placeholder={field.type === 'RELATION' ? 'Related record' : field.name} />}</label>)}
     <button className="pf-button pf-button--primary pf-button--sm" type="button" disabled>Submit preview · runtime coming next</button>
   </div>;
-  if (component.type === 'chart') return <div className="builder-preview-chart"><h4>{component.title}</h4><p>{component.description}</p><div className="builder-chart-bars" aria-label="Illustrative chart preview">{[42, 68, 54, 82, 61, 94, 72].map((height, index) => <span key={index} style={{ height: height + '%' }} />)}</div><small>{component.content}</small></div>;
+  if (component.type === 'chart') {
+    const groups = aggregate?.groups.length ? aggregate.groups : aggregate ? [{ label: 'Total', value: aggregate.value }] : [];
+    const maxValue = Math.max(1, ...groups.map((group) => group.value));
+    return <div className="builder-preview-chart"><h4>{component.title}</h4><p>{component.description}</p>
+      {!component.dataBinding?.resourceId ? <p className="builder-binding-empty">Choose a resource in Properties to build a live chart.</p>
+        : isLoadingBinding ? <p className="builder-binding-empty">Calculating chart data…</p>
+        : !aggregate ? <p className="builder-binding-empty">No chart data is available for this resource.</p>
+        : <><div className="builder-chart-bars" aria-label="Chart of grouped resource values">{groups.map((group) => <span key={group.label} title={group.label + ': ' + group.value} style={{ height: Math.max(4, group.value / maxValue * 100) + '%' }} />)}</div><div className="builder-chart-labels">{groups.map((group) => <small key={group.label}>{group.label}: {new Intl.NumberFormat().format(group.value)}</small>)}</div><small>Based on up to {aggregate.scanLimit} recent records · {aggregate.scanned} scanned</small></>}
+    </div>;
+  }
   return <div className="builder-preview-text"><h3>{component.title}</h3><p>{component.content}</p></div>;
 }
 
@@ -61,6 +71,7 @@ export default function BuilderPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [resourceFields, setResourceFields] = useState<ResourceField[]>([]);
   const [previewRecords, setPreviewRecords] = useState<ResourceRecord[]>([]);
+  const [aggregatePreview, setAggregatePreview] = useState<ResourceAggregatePreview | null>(null);
   const [loadingResourceId, setLoadingResourceId] = useState<string | null>(null);
   const [bindingError, setBindingError] = useState('');
 
@@ -132,9 +143,12 @@ export default function BuilderPage() {
   const selectedResourceId = selectedComponent?.dataBinding?.resourceId ?? null;
   const selectedType = selectedComponent?.type ?? null;
   const isLoadingBinding = Boolean(selectedResourceId && loadingResourceId === selectedResourceId);
+  const selectedAggregation = selectedComponent?.dataBinding?.aggregation ?? 'count';
+  const selectedAggregateField = selectedComponent?.dataBinding?.field ?? '';
+  const selectedGroupBy = selectedComponent?.dataBinding?.groupBy ?? '';
 
   useEffect(() => {
-    if (!user || !tenant || !accessToken || !selectedResourceId || !selectedType || !['table', 'form'].includes(selectedType)) return;
+    if (!user || !tenant || !accessToken || !selectedResourceId || !selectedType || !['table', 'form', 'metric', 'chart'].includes(selectedType)) return;
     let cancelled = false;
     const base = '/api/v1/tenants/' + tenant.id + '/applications/' + applicationId + '/resources/' + selectedResourceId;
     const headers = { Authorization: 'Bearer ' + accessToken };
@@ -143,15 +157,22 @@ export default function BuilderPage() {
       setLoadingResourceId(selectedResourceId);
       setResourceFields([]);
       setPreviewRecords([]);
+      setAggregatePreview(null);
       setBindingError('');
       const fieldsRequest = fetch(base + '/fields', { headers, credentials: 'include', cache: 'no-store' });
       const recordsRequest = selectedType === 'table'
         ? fetch(base + '/records?page=1&pageSize=5', { headers, credentials: 'include', cache: 'no-store' })
         : Promise.resolve(null);
-      return Promise.all([fieldsRequest, recordsRequest]);
+      const aggregateQuery = new URLSearchParams({ operation: selectedAggregation });
+      if (selectedAggregateField) aggregateQuery.set('field', selectedAggregateField);
+      if (selectedGroupBy) aggregateQuery.set('groupBy', selectedGroupBy);
+      const aggregateRequest = ['metric', 'chart'].includes(selectedType) && (selectedAggregation === 'count' || Boolean(selectedAggregateField))
+        ? fetch(base + '/aggregate?' + aggregateQuery.toString(), { headers, credentials: 'include', cache: 'no-store' })
+        : Promise.resolve(null);
+      return Promise.all([fieldsRequest, recordsRequest, aggregateRequest]);
     }).then(async (responses) => {
       if (!responses || cancelled) return;
-      const [fieldsResponse, recordsResponse] = responses;
+      const [fieldsResponse, recordsResponse, aggregateResponse] = responses;
       if (!fieldsResponse.ok) throw new Error('Could not load fields for the selected resource.');
       const fields = await fieldsResponse.json() as ResourceField[];
       let records: ResourceRecord[] = [];
@@ -160,12 +181,17 @@ export default function BuilderPage() {
         const payload = await recordsResponse.json() as { items?: ResourceRecord[] };
         records = Array.isArray(payload.items) ? payload.items : [];
       }
-      if (!cancelled) { setResourceFields(fields); setPreviewRecords(records); }
+      let aggregate: ResourceAggregatePreview | null = null;
+      if (aggregateResponse) {
+        if (!aggregateResponse.ok) { const payload = await aggregateResponse.json().catch(() => null) as { message?: string | string[] } | null; throw new Error(Array.isArray(payload?.message) ? payload.message.join(' ') : payload?.message || 'Could not calculate resource aggregates.'); }
+        aggregate = await aggregateResponse.json() as ResourceAggregatePreview;
+      }
+      if (!cancelled) { setResourceFields(fields); setPreviewRecords(records); setAggregatePreview(aggregate); }
     }).catch((loadError) => {
-      if (!cancelled) { setResourceFields([]); setPreviewRecords([]); setBindingError(loadError instanceof Error ? loadError.message : 'Could not load resource data.'); }
+      if (!cancelled) { setResourceFields([]); setPreviewRecords([]); setAggregatePreview(null); setBindingError(loadError instanceof Error ? loadError.message : 'Could not load resource data.'); }
     }).finally(() => { if (!cancelled) setLoadingResourceId(null); });
     return () => { cancelled = true; };
-  }, [user, tenant, accessToken, applicationId, selectedResourceId, selectedType]);
+  }, [user, tenant, accessToken, applicationId, selectedResourceId, selectedType, selectedAggregation, selectedAggregateField, selectedGroupBy]);
 
   async function saveConfiguration() {
     if (!tenant || !accessToken || builderVersion === null || !canSave || !hasUnsavedChanges || isSaving) return;
@@ -231,16 +257,21 @@ export default function BuilderPage() {
     if (!selectedComponent) return;
     setComponents((current) => current.map((component) => component.id === selectedComponent.id ? { ...component, [key]: value } : component));
   }
-  function updateDataBinding(key: 'resourceId' | 'mode' | 'columns', value: string | string[] | null) {
+  function updateDataBinding(key: 'resourceId' | 'mode' | 'columns' | 'aggregation' | 'field' | 'groupBy', value: string | string[] | null) {
     if (!selectedComponent) return;
+    if (key === 'resourceId') { setResourceFields([]); setPreviewRecords([]); setAggregatePreview(null); }
     setComponents((current) => current.map((component) => {
       if (component.id !== selectedComponent.id) return component;
       const existing = component.dataBinding ?? { resourceId: null };
       const dataBinding = key === 'resourceId'
-        ? { ...existing, resourceId: value as string | null, columns: undefined }
+        ? { ...existing, resourceId: value as string | null, columns: undefined, field: undefined, groupBy: undefined }
         : key === 'mode'
           ? { ...existing, mode: value as 'create' | 'edit' }
-          : { ...existing, columns: value as string[] };
+          : key === 'columns'
+            ? { ...existing, columns: value as string[] }
+            : key === 'aggregation'
+              ? { ...existing, aggregation: value as 'count' | 'sum' | 'average' | 'min' | 'max' }
+              : key === 'field' ? { ...existing, field: value as string } : { ...existing, groupBy: value as string };
       return { ...component, dataBinding };
     }));
   }
@@ -309,7 +340,7 @@ export default function BuilderPage() {
                   </div>
                   {component.id === selectedId && <span className="builder-selected-label">Selected</span>}
                 </div>
-                <div className="builder-node-preview" onClick={() => setSelectedId(component.id)}><ComponentPreview component={component} fields={component.id === selectedId ? resourceFields : []} records={component.id === selectedId ? previewRecords : []} isLoadingBinding={component.id === selectedId && isLoadingBinding} /></div>
+                <div className="builder-node-preview" onClick={() => setSelectedId(component.id)}><ComponentPreview component={component} fields={component.id === selectedId ? resourceFields : []} records={component.id === selectedId ? previewRecords : []} aggregate={component.id === selectedId ? aggregatePreview : null} isLoadingBinding={component.id === selectedId && isLoadingBinding} /></div>
               </article>)}
             </div>}
           </div>
@@ -324,7 +355,7 @@ export default function BuilderPage() {
           {!selectedComponent || !selectedDefinition ? <div className="builder-inspector-empty"><span>◇</span><p>No component selected</p><small>Choose a component on the canvas to inspect its properties.</small></div> : <>
             <div className="builder-inspector-type"><span className="builder-component-icon">{selectedDefinition.icon}</span><span><strong>{selectedDefinition.label}</strong><small>{selectedDefinition.type}</small></span></div>
             {selectedDefinition.properties.map((property) => <label className="pf-field builder-property-field" key={property.key}><span className="pf-label">{property.label}</span>{property.control === 'textarea' ? <textarea className="pf-input builder-property-textarea" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} /> : <input className="pf-input" value={selectedComponent[property.key]} onChange={(event) => updateSelected(property.key, event.target.value)} />}</label>)}
-            {(selectedComponent.type === 'table' || selectedComponent.type === 'form') && <div className="builder-data-binding-controls">
+            {(selectedComponent.type === 'table' || selectedComponent.type === 'form' || selectedComponent.type === 'metric' || selectedComponent.type === 'chart') && <div className="builder-data-binding-controls">
               <p className="eyebrow">DATA SOURCE</p>
               <label className="pf-field builder-property-field"><span className="pf-label">Resource</span>
                 <select className="pf-input" value={selectedComponent.dataBinding?.resourceId ?? ''} onChange={(event) => updateDataBinding('resourceId', event.target.value || null)}>
@@ -340,10 +371,28 @@ export default function BuilderPage() {
                 })}
                 <small className="builder-layout-help">Select which resource fields appear in the table preview.</small>
               </div>}
+              {(selectedComponent.type === 'metric' || selectedComponent.type === 'chart') && selectedResourceId && <>
+                <label className="pf-field builder-property-field"><span className="pf-label">Aggregation</span>
+                  <select className="pf-input" value={selectedComponent.dataBinding?.aggregation ?? 'count'} onChange={(event) => updateDataBinding('aggregation', event.target.value)}>
+                    <option value="count">Count records</option><option value="sum">Sum</option><option value="average">Average</option><option value="min">Minimum</option><option value="max">Maximum</option>
+                  </select>
+                </label>
+                {selectedAggregation !== 'count' && <label className="pf-field builder-property-field"><span className="pf-label">Numeric field</span>
+                  <select className="pf-input" value={selectedComponent.dataBinding?.field ?? ''} onChange={(event) => updateDataBinding('field', event.target.value)}>
+                    <option value="">Choose a number field…</option>{resourceFields.filter((field) => field.type === 'NUMBER').map((field) => <option key={field.id} value={field.key}>{field.name}</option>)}
+                  </select>
+                </label>}
+                {selectedAggregation !== 'count' && !selectedAggregateField && <small className="builder-layout-help">Choose a numeric field to calculate this metric or chart.</small>}
+                {selectedComponent.type === 'chart' && <label className="pf-field builder-property-field"><span className="pf-label">Group by</span>
+                  <select className="pf-input" value={selectedComponent.dataBinding?.groupBy ?? ''} onChange={(event) => updateDataBinding('groupBy', event.target.value)}>
+                    <option value="">No grouping · total only</option>{resourceFields.map((field) => <option key={field.id} value={field.key}>{field.name}</option>)}
+                  </select>
+                </label>}
+              </>}
               {selectedComponent.type === 'form' && <label className="pf-field builder-property-field"><span className="pf-label">Form mode</span>
                 <select className="pf-input" value={selectedComponent.dataBinding?.mode ?? 'create'} onChange={(event) => updateDataBinding('mode', event.target.value)}><option value="create">Create record</option><option value="edit">Edit record</option></select>
               </label>}
-              <small className="builder-layout-help">The builder previews the selected resource schema. Form submission and record editing will be enabled in the application runtime phase.</small>
+              <small className="builder-layout-help">Metric cards and charts calculate values from up to 500 recent records. Form submission and record editing will be enabled in the application runtime phase.</small>
               {bindingError && <p className="application-error" role="alert">{bindingError}</p>}
             </div>}
             <div className="builder-layout-controls">

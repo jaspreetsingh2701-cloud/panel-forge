@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { PrismaService } from '../database/prisma.service';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { CreateFieldDto } from './dto/create-field.dto';
+import { aggregateResourceRecords, type ResourceAggregateOperation } from './aggregate-resource-records';
 
 type Field = { key:string; name:string; type:string; required:boolean; options:string[]; relationResourceId:string|null };
 @Injectable()
@@ -90,6 +91,17 @@ export class DataEngineService {
   const result=await this.prisma.dynamicRecord.deleteMany({where:{id:recordId,resourceId}});
   if(result.count!==1) throw new NotFoundException('Record not found.');
   return {message:'Record deleted.'};
+ }
+ async aggregateRecords(userId:string,tenantId:string,applicationId:string,resourceId:string,query:Record<string,string>){
+  const resource=await this.resource(userId,tenantId,applicationId,resourceId);
+  const operation=(query.operation??'count') as ResourceAggregateOperation;
+  if(!['count','sum','average','min','max'].includes(operation)) throw new BadRequestException('Unsupported aggregation operation.');
+  const records=await this.prisma.dynamicRecord.findMany({where:{resourceId},orderBy:{updatedAt:'desc'},take:500,select:{data:true}});
+  try{
+   return aggregateResourceRecords(resource.fields,records as {data:Record<string,unknown>}[],operation,query.field,query.groupBy);
+  }catch(error){
+   throw new BadRequestException(error instanceof Error?error.message:'Could not aggregate resource records.');
+  }
  }
  async listRecords(userId:string,tenantId:string,applicationId:string,resourceId:string,query:Record<string,string>){
   const resource=await this.resource(userId,tenantId,applicationId,resourceId);
