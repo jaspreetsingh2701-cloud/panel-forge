@@ -78,7 +78,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Access token is missing or invalid.' })
   async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const authorization = request.headers.authorization;
-    const match = authorization ? /^Bearer\\s+(\\S+)$/i.exec(authorization) : null;
+    const match = authorization ? /^Bearer\s+(\S+)$/i.exec(authorization) : null;
     if (!match) { this.clearRefreshCookie(response); throw new UnauthorizedException(); }
     let payload: { sub: string; sid: string };
     try { payload = await this.jwtService.verifyAsync(match[1]); }
