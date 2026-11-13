@@ -3,7 +3,8 @@ export type BuilderPropertyKey = 'title' | 'description' | 'content';
 export type BuilderLayoutWidth = 'full' | 'half' | 'third';
 export type BuilderLayoutSpacing = 'compact' | 'comfortable' | 'spacious';
 export type BuilderLayout = { width: BuilderLayoutWidth; spacing: BuilderLayoutSpacing };
-export type BuilderComponent = { id: string; type: BuilderComponentType; title: string; description: string; content: string; layout: BuilderLayout };
+export type BuilderDataBinding = { resourceId: string | null; columns?: string[]; mode?: 'create' | 'edit' };
+export type BuilderComponent = { id: string; type: BuilderComponentType; title: string; description: string; content: string; layout: BuilderLayout; dataBinding?: BuilderDataBinding };
 export type BuilderComponentDefinition = {
   type: BuilderComponentType; label: string; category: 'Content' | 'Data'; description: string; icon: string;
   defaults: Omit<BuilderComponent, 'id' | 'type' | 'layout'>;
