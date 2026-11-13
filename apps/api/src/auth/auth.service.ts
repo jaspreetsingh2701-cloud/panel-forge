@@ -180,6 +180,7 @@ export class AuthService {
         email: true,
         displayName: true,
         emailVerifiedAt: true,
+        platformRole: true,
         createdAt: true,
 
         // Only return active workspace memberships.
@@ -217,6 +218,7 @@ export class AuthService {
       email: user.email,
       displayName: user.displayName,
       emailVerifiedAt: user.emailVerifiedAt,
+      platformRole: user.platformRole,
       createdAt: user.createdAt,
 
       tenants: user.memberships.map((membership) => ({

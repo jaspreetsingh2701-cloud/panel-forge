@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 
 type Tenant = { id: string; name: string; slug: string; role: string };
-type User = { id: string; email: string; displayName: string | null; emailVerifiedAt: string | null; tenants: Tenant[] };
+type User = { id: string; email: string; displayName: string | null; emailVerifiedAt: string | null; platformRole: 'PLATFORM_USER' | 'SUPER_ADMIN'; tenants: Tenant[] };
 type AuthContextValue = {
   accessToken: string | null;
   user: User | null;

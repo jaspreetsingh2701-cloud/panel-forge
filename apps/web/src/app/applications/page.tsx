@@ -104,6 +104,7 @@ export default function ApplicationsPage() {
   if (!user) return <main className="app-loading page-shell"><span className="brand-mark">P</span><p>{isLoading ? 'Restoring your session…' : 'Opening your workspace…'}</p></main>;
   const greeting = user.displayName || user.email;
   const canManage = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
+  const isSuperAdmin = user.platformRole === 'SUPER_ADMIN';
 
   return (
     <main className="app-shell">
@@ -117,6 +118,7 @@ export default function ApplicationsPage() {
           <a className="sidebar-link sidebar-link--disabled" href="#data-sources"><span>⌘</span> Data sources <span className="pf-badge">Coming soon</span></a>
           <a className="sidebar-link" href="/members"><span>♧</span> Members <span className="pf-badge">Coming soon</span></a>
         </nav>
+        {isSuperAdmin && <><p className="sidebar-label">PLATFORM</p><nav className="sidebar-nav" aria-label="Platform administration"><Link className="sidebar-link" href="/platform/docs"><span>▤</span> Documentation</Link><Link className="sidebar-link" href="/platform/api-reference"><span>⌘</span> API Reference</Link></nav></>}
         <div className="sidebar-bottom"><p className="sidebar-label">ACCOUNT</p><div className="account-mini"><span className="user-avatar">{greeting.slice(0, 1).toUpperCase()}</span><span><strong>{greeting}</strong><small>{user.email}</small></span></div></div>
       </aside>
       <section className="app-main">

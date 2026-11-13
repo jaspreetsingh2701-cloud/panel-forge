@@ -58,6 +58,7 @@ export default function AppDashboardPage() {
 
   const activeTenant = tenants[0];
   const greeting = user.displayName?.trim() || user.email.split('@')[0];
+  const isSuperAdmin = user.platformRole === 'SUPER_ADMIN';
 
   return (
     <main className="app-shell">
@@ -91,6 +92,7 @@ export default function AppDashboardPage() {
             <span>♧</span> Members <Badge>Coming soon</Badge>
           </a>
         </nav>
+        {isSuperAdmin && <><p className="sidebar-label">PLATFORM</p><nav className="sidebar-nav" aria-label="Platform administration"><Link className="sidebar-link" href="/platform/docs"><span>▤</span> Documentation</Link><Link className="sidebar-link" href="/platform/api-reference"><span>⌘</span> API Reference</Link></nav></>}
         <div className="sidebar-bottom">
           <p className="sidebar-label">ACCOUNT</p>
           <div className="account-mini">

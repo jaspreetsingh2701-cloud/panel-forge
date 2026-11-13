@@ -107,13 +107,15 @@ A Tenant Admin cannot create a platform Super Admin, grant themselves platform a
 
 **Implemented today**
 - Platform user identity and tenant membership.
+- Independent platform roles: `PLATFORM_USER` and `SUPER_ADMIN`; tenant roles do not imply platform privileges.
+- Super Admin-only documentation catalogue and protected OpenAPI specification access, with server-side role checks and an explicit initial-admin bootstrap procedure.
 - Tenant-scoped roles: `OWNER`, `ADMIN` and `MEMBER`.
 - Workspace member/invitation management foundation.
 - Application creation and builder draft writes restricted to tenant owners/admins.
 - Tenant/application scoping for resources and dynamic records.
 
 **Not yet implemented**
-- Platform Super Admin role and platform administration console.
+- Full platform administration console for tenant lifecycle, platform configuration and audited support workflows.
 - Application-level Builder/Editor and Consumer/Viewer assignments.
 - Custom roles and permission editor.
 - Per-resource CRUD grants, field restrictions and record scopes.
