@@ -136,6 +136,7 @@ export default function ApplicationsPage() {
                 <div className="application-card-actions">
                   <Link className="pf-button pf-button--primary pf-button--sm" href={'/applications/' + application.id + '/builder'}>Open builder <span aria-hidden="true">→</span></Link>
                   <Link className="pf-button pf-button--ghost pf-button--sm" href={`/applications/${application.id}/resources`}>Manage data <span aria-hidden="true">→</span></Link>
+                  <Link className="pf-button pf-button--ghost pf-button--sm" href={`/applications/${application.id}/run`}>Run preview <span aria-hidden="true">→</span></Link>
                 </div>
                 {canManage && <button className="application-archive" type="button" onClick={() => void archiveApplication(application.id)}>Archive</button>}
               </article>
