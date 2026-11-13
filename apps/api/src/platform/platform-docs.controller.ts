@@ -1,7 +1,7 @@
 import { Controller, Get, NotFoundException, Query, UseGuards } from '@nestjs/common';
 import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { PlatformSuperAdminGuard } from './platform-super-admin.guard';
 
