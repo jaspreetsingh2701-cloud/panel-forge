@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useParams,useRouter } from 'next/navigation';
 import { useCallback,useEffect,useState,type FormEvent } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
+import { PlatformNavSection } from '@/components/navigation/platform-nav-section';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 type Resource={id:string;name:string;key:string;description:string|null;_count:{records:number;fields:number}};
 export default function ResourcesPage(){
@@ -23,6 +24,7 @@ export default function ResourcesPage(){
  <a className="sidebar-link sidebar-link--disabled" href="#data-sources"><span>⌘</span> Data sources <span className="pf-badge">Coming soon</span></a>
  <a className="sidebar-link" href="/members"><span>♧</span> Members <span className="pf-badge">Coming soon</span></a>
  </nav>
+ <PlatformNavSection />
  <div className="sidebar-bottom"><p className="sidebar-label">ACCOUNT</p><div className="account-mini"><span className="user-avatar">{greeting.slice(0,1).toUpperCase()}</span><span><strong>{greeting}</strong><small>{user.email}</small></span></div><button className="pf-button pf-button--ghost pf-button--sm signout-button" type="button" onClick={()=>void handleLogout()}>Sign out ↗</button></div></aside>
  <section className="app-main"><header className="app-topbar"><div><Link className="breadcrumb-muted" href="/applications">Applications</Link><span className="breadcrumb-divider">/</span><strong>Resources</strong></div><div className="app-top-actions"><span className="topbar-user">{user.email}</span><ThemeToggle/></div></header><div className="dashboard-content">
  <div className="applications-heading"><div><p className="eyebrow">DATA MODEL</p><h1>Resources <span>library.</span></h1><p>Define the records your application manages: customers, orders, products and more.</p></div>{admin&&<button className="pf-button pf-button--primary" onClick={()=>setCreating(true)}>＋ New resource</button>}</div>

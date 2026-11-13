@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
+import { PlatformNavSection } from '@/components/navigation/platform-nav-section';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,8 +59,6 @@ export default function AppDashboardPage() {
 
   const activeTenant = tenants[0];
   const greeting = user.displayName?.trim() || user.email.split('@')[0];
-  const isSuperAdmin = user.platformRole === 'SUPER_ADMIN';
-
   return (
     <main className="app-shell">
       <aside className="app-sidebar">
@@ -92,7 +91,7 @@ export default function AppDashboardPage() {
             <span>♧</span> Members <Badge>Coming soon</Badge>
           </a>
         </nav>
-        {isSuperAdmin && <><p className="sidebar-label">PLATFORM</p><nav className="sidebar-nav" aria-label="Platform administration"><Link className="sidebar-link" href="/platform/docs"><span>▤</span> Documentation</Link><Link className="sidebar-link" href="/platform/api-reference"><span>⌘</span> API Reference</Link></nav></>}
+        <PlatformNavSection />
         <div className="sidebar-bottom">
           <p className="sidebar-label">ACCOUNT</p>
           <div className="account-mini">

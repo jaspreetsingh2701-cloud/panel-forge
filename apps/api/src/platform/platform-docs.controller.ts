@@ -1,7 +1,7 @@
 import { Controller, Get, NotFoundException, Query, UseGuards } from '@nestjs/common';
 import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { PlatformSuperAdminGuard } from './platform-super-admin.guard';
 
@@ -29,7 +29,13 @@ export class PlatformDocsController {
     }
     const root = this.repositoryRoot();
     const absolutePath = resolve(root, requestedPath);
-    if (!absolutePath.startsWith(root + '/') || !existsSync(absolutePath)) {
+    const relativePath = relative(root, absolutePath);
+    if (
+      relativePath === '..' ||
+      relativePath.startsWith(`..${sep}`) ||
+      isAbsolute(relativePath) ||
+      !existsSync(absolutePath)
+    ) {
       throw new NotFoundException('Documentation file not found.');
     }
     const content = await readFile(absolutePath, 'utf8');
