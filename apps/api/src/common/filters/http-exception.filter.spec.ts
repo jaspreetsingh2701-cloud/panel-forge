@@ -3,7 +3,6 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
 import { HttpExceptionFilter } from './http-exception.filter';
 
 function createHttpContext(requestId = 'request-123') {
