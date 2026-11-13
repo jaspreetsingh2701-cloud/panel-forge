@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyNested } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize, ArrayUnique, IsArray, IsDefined, IsInt, IsIn,
@@ -36,7 +36,7 @@ class BuilderComponentDto {
   @IsString() @MaxLength(5000)
   content!: string;
 
-  @ApiPropertyNested({ type: BuilderLayoutDto })
+  @ApiProperty({ type: BuilderLayoutDto })
   @IsDefined() @ValidateNested() @Type(() => BuilderLayoutDto)
   layout!: BuilderLayoutDto;
 }
