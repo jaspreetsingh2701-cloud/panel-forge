@@ -14,7 +14,7 @@ export default function PlatformApiReferencePage() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (!user) { void refreshSession().then((ok) => { if (!ok) router.replace('/login'); }); return; }
-    if (user.platformRole !== 'SUPER_ADMIN') { setError('This section is available to platform Super Admins only.'); setLoading(false); return; }
+    if (user.platformRole !== 'SUPER_ADMIN') return;
     if (!accessToken) return;
     void fetch('/api/v1/platform/openapi.json', { headers: { Authorization: `Bearer ${accessToken}` }, cache: 'no-store' }).then(async (response) => {
       if (!response.ok) throw new Error(response.status === 403 ? 'Super Admin access is required.' : 'Could not load the OpenAPI specification.');
