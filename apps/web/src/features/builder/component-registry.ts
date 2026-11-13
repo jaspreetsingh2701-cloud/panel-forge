@@ -58,7 +58,7 @@ export function moveBuilderComponent<T>(items: readonly T[], sourceIndex: number
 
 export type BuilderValidationIssue = { componentId: string; field: 'title' | 'resourceId' | 'field'; message: string };
 
-export function validateBuilderComponents(components: readonly BuilderComponent[], resourceIds: readonly string[], selectedResourceFields: readonly { key: string; type: string }[] = [], selectedComponentId?: string): BuilderValidationIssue[] {
+export function validateBuilderComponents(components: readonly BuilderComponent[], resourceIds: readonly string[], selectedResourceFields: readonly { key: string; type: string }[] = [], selectedComponentId?: string, resourceListLoaded = false): BuilderValidationIssue[] {
   const issues: BuilderValidationIssue[] = [];
   for (const component of components) {
     if (!component.title.trim()) issues.push({ componentId: component.id, field: 'title', message: 'Add a title for this component.' });
