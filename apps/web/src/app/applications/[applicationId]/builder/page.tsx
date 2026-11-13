@@ -27,7 +27,7 @@ const categories = Array.from(new Set(COMPONENT_REGISTRY.map((definition) => def
 function ComponentPreview({ component, fields = [], records = [], isLoadingBinding = false }: { component: BuilderComponent; fields?: ResourceField[]; records?: ResourceRecord[]; isLoadingBinding?: boolean }) {
   if (component.type === 'metric') return <div className="builder-preview-metric"><span>{component.title}</span><strong>{component.content || '—'}</strong><small>{component.description}</small></div>;
   if (component.type === 'table') {
-    const selectedColumns = component.dataBinding?.columns?.length ? component.dataBinding.columns : fields.slice(0, 3).map((field) => field.key);
+    const selectedColumns = Array.isArray(component.dataBinding?.columns) ? component.dataBinding.columns : fields.slice(0, 3).map((field) => field.key);
     const visibleFields = fields.filter((field) => selectedColumns.includes(field.key));
     return <div className="builder-preview-table-wrap"><h4>{component.title}</h4><p>{component.description}</p>
       {!component.dataBinding?.resourceId ? <p className="builder-binding-empty">Choose a resource in Properties to preview its records.</p>
@@ -244,7 +244,7 @@ export default function BuilderPage() {
       if (component.id !== selectedComponent.id) return component;
       const existing = component.dataBinding ?? { resourceId: null };
       const dataBinding = key === 'resourceId'
-        ? { ...existing, resourceId: value as string | null, columns: [] }
+        ? { ...existing, resourceId: value as string | null, columns: undefined }
         : key === 'mode'
           ? { ...existing, mode: value as 'create' | 'edit' }
           : { ...existing, columns: value as string[] };
@@ -342,7 +342,7 @@ export default function BuilderPage() {
               {selectedComponent.type === 'table' && selectedResourceId && <div className="builder-binding-columns">
                 <span className="pf-label">Visible columns</span>
                 {resourceFields.map((field) => {
-                  const activeColumns = selectedComponent.dataBinding?.columns?.length ? selectedComponent.dataBinding.columns : resourceFields.slice(0, 3).map((item) => item.key);
+                  const activeColumns = Array.isArray(selectedComponent.dataBinding?.columns) ? selectedComponent.dataBinding.columns : resourceFields.slice(0, 3).map((item) => item.key);
                   return <label className="builder-binding-checkbox" key={field.id}><input type="checkbox" checked={activeColumns.includes(field.key)} onChange={(event) => updateDataBinding('columns', event.target.checked ? [...activeColumns, field.key] : activeColumns.filter((key) => key !== field.key))} /><span>{field.name}</span></label>;
                 })}
                 <small className="builder-layout-help">Select which resource fields appear in the table preview.</small>
