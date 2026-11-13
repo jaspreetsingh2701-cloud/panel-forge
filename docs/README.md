@@ -7,10 +7,10 @@ This directory is the canonical source of truth for product, architecture, data,
 | Section | Purpose | Key documents |
 |---|---|---|
 | `00-product/` | Product direction and scope | Product definition, MVP scope |
-| `01-architecture/` | System design and security | Technology stack, system architecture, engine contracts, security and tenant isolation |
+| `01-architecture/` | System design and security | Technology stack, system architecture, engine contracts, [authorization and role model](01-architecture/authorization-and-role-model.md), security and tenant isolation |
 | `02-database/` | Persistence and data integrity | Data model and storage, logical ERD |
 | `03-engines/` | Detailed engine specifications | To be added with implementation design |
-| `04-features/` | User-facing feature specifications | [Visual builder](04-features/visual-builder.md) |
+| `04-features/` | User-facing feature specifications and reusable help | [Visual builder](04-features/visual-builder.md), [Builder help and tutorials](04-features/builder-help.md) |
 | `05-api/` | API contract conventions | API conventions |
 | `06-operations/` | Quality and production operations | Testing strategy, deployment and CI/CD |
 | `07-project-management/` | Delivery and change tracking | Phase 0 baseline, roadmap, backlog, progress, documentation change log, versioning |

@@ -100,3 +100,27 @@ The canvas is not a freeform layout engine. Phase 4.1 provides the editor shell;
 - 4.4 Resource-bound forms and tables.
 - 4.5 Draft configuration persistence and restore — delivered in the current implementation.
 - 4.6 Preview and validation feedback.
+
+
+## Phase 4.6 — Builder UX, validation and editing
+
+- Validate component titles and required data bindings before saving a draft.
+- Show actionable validation messages in the inspector and mark components that need configuration.
+- Validate resource bindings against resources in the current application.
+- Require a numeric field for sum, average, minimum and maximum metric/chart aggregations; verify its type when the selected resource metadata is loaded.
+- Block draft save while validation issues remain. This is draft-configuration validation, not a published-runtime readiness guarantee.
+- Duplicate the selected component with a new component ID while preserving its declarative configuration.
+- Support undo/redo with a bounded 50-step in-memory history.
+- Support Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo, Ctrl/Cmd+D duplicate and Delete/Backspace remove when focus is not inside a form control.
+- Keep edits within the current application draft and preserve optimistic version checks on save.
+
+### Acceptance criteria
+
+1. Blank component titles and missing data bindings produce component-specific messages.
+2. Missing or stale resource selections cannot be saved.
+3. Non-count metric/chart aggregations require a numeric field.
+4. Save remains disabled until configuration validation passes.
+5. Duplicate creates a distinct component ID and preserves component properties and bindings.
+6. Undo/redo restore prior configurations without mutating history snapshots.
+7. Keyboard shortcuts do not intercept typing in input, textarea or select controls.
+8. Validation and history helpers have unit coverage; web lint, typecheck, tests, build and Playwright smoke checks pass.

@@ -1,7 +1,7 @@
 ---
 title: PanelForge project progress
 status: Active
-version: 1.2
+version: 1.3
 last_updated: 2026-11-13
 source_of_truth: true
 ---
@@ -23,19 +23,18 @@ Phase 4 — Visual builder.
 ## Phase 4 — Visual builder
 | Batch | Status | Evidence |
 |---|---|---|
-| 4.1 Builder shell and component registry | Complete | Application-scoped editor shell, allowlisted component palette, in-memory canvas and property inspector; merged PR #22 |
-| 4.2 Canvas interactions and ordering | Complete | Accessible selection, keyboard-operable move controls, native drag-and-drop, removal and ordering tests; merged PR #23 |
-| 4.3 Responsive layout primitives | In progress | Full/half/third-width grid placement, responsive breakpoints and spacing controls; PR #24 |
-| 4.4 Resource-bound forms and tables | Planned | Configure forms and tables against application resources |
-| 4.5 Draft configuration persistence | Planned | Save, load and version draft page configuration |
-| 4.6 Preview and validation | Planned | Draft preview, validation feedback and safe unsupported-component states |
+| 4.1 Builder shell and component registry | Complete | Application-scoped editor shell, allowlisted component palette and inspector; merged PR #22 |
+| 4.2 Canvas interactions and ordering | Complete | Accessible selection, keyboard-operable move controls, drag-and-drop and removal; merged PR #23 |
+| 4.3 Responsive layout primitives | Complete | Full/half/third-width layouts and responsive spacing; merged PR #24 |
+| 4.4 Resource-bound forms and tables | Complete | Resource-backed table/form previews and binding configuration; merged PR #32 |
+| 4.5 Draft persistence and data-driven metrics/charts | Complete | Save/restore, JSONB dirty-state fixes, resource aggregation and live previews; merged PRs #29–#35 |
+| 4.6 Builder UX, validation and editing | In progress | Configuration validation, duplicate, undo/redo, keyboard shortcuts and reusable help; PR pending |
 
 ## Upcoming phases
-- Phase 5 — Data-source adapters.
-- Phase 6 — Dynamic RBAC.
-- Phase 7 — Page builder and dashboards.
-- Phase 8 — Actions, publishing and audit.
-- Phase 9 — Production hardening.
+- Phase 5 — Application runtime: render saved applications and enable safe form submissions, record CRUD and runtime navigation.
+- Phase 6 — Dynamic RBAC: platform/tenant/application roles, resource/action permissions, field restrictions and record scopes.
+- Phase 7 — Publishing and access control: immutable snapshots, controlled activation, consumer access and rollback.
+- Phase 8 — Production hardening: observability, audit, security, performance, backups and deployment readiness.
 
 Deployment remains deferred until production-hardening exit criteria are met.
 

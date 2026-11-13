@@ -109,9 +109,15 @@ The effective policy combines:
 4. Field visibility and editability.
 5. Record-level scope, such as all records, assigned records or own records.
 
-Role assignment is scoped to a tenant and, where applicable, an application. The exact role inheritance and precedence model must be documented before implementation.
+Role assignment is scoped to a tenant and, where applicable, an application. Deny by default when no applicable grant exists. Conflicting or malformed policy data must not grant access.
 
-Deny by default when no applicable grant exists. Conflicting or malformed policy data must not grant access.
+### 6.1 Current implementation versus target model
+
+The current implementation has tenant-scoped `OWNER`, `ADMIN` and `MEMBER` roles. Builder draft writes are currently limited to owners/admins. These are not yet the complete Super Admin, Builder and Consumer model.
+
+The target product model is documented in [Authorization and role model](authorization-and-role-model.md). It introduces a platform-level Super Admin boundary and tenant/application-scoped administration and consumer permissions. This is an architectural target, not a claim that platform Super Admin or fine-grained custom roles are already implemented.
+
+A tenant Admin must never inherit platform Super Admin authority. Platform support access must be separately authenticated, narrowly scoped and audited.
 
 ## 7. Query enforcement
 
