@@ -36,13 +36,17 @@ Run these commands from the repository root.
    pnpm install
    ```
 
-5. Create and apply the initial development migration:
+5. Check and apply all committed migrations:
 
    ```powershell
-   pnpm --filter @panelforge/api db:migrate --name init
+   pnpm --filter @panelforge/api db:status
+   pnpm --filter @panelforge/api db:deploy
    ```
 
-The database connection is read from `apps/api/.env`. The example file contains local-only credentials; do not use them outside local development.
+Set `DATABASE_URL` in `apps/api/.env` to match the credentials in `compose.yaml`, for example:
+`postgresql://panelforge:panelforge_dev@localhost:5432/panelforge`.
+
+The example file contains local-only credentials; do not use them outside local development.
 
 ## Run the API
 
