@@ -32,3 +32,21 @@ export function createBuilderComponent(type: BuilderComponentType, id: string): 
   if (!definition) throw new Error('Unsupported builder component type.');
   return { id, type: definition.type, ...definition.defaults };
 }
+
+/** Return a reordered copy; invalid or out-of-range moves leave the list unchanged. */
+export function moveBuilderComponent<T>(items: readonly T[], sourceIndex: number, destinationIndex: number): T[] {
+  if (
+    sourceIndex < 0 ||
+    destinationIndex < 0 ||
+    sourceIndex >= items.length ||
+    destinationIndex >= items.length ||
+    sourceIndex === destinationIndex
+  ) {
+    return [...items];
+  }
+
+  const reordered = [...items];
+  const [moved] = reordered.splice(sourceIndex, 1);
+  reordered.splice(destinationIndex, 0, moved);
+  return reordered;
+}

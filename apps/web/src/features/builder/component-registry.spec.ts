@@ -1,4 +1,4 @@
-import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, isBuilderComponentType } from './component-registry';
+import { COMPONENT_REGISTRY, createBuilderComponent, getBuilderComponentDefinition, isBuilderComponentType, moveBuilderComponent } from './component-registry';
 describe('builder component registry', () => {
   it('exposes unique, allowlisted component identifiers', () => {
     const types = COMPONENT_REGISTRY.map((definition) => definition.type);
@@ -15,5 +15,16 @@ describe('builder component registry', () => {
   });
   it('returns no definition for an unknown component type', () => {
     expect(getBuilderComponentDefinition('unknown')).toBeUndefined();
+  });
+  it('moves a component to the requested position without mutating the original list', () => {
+    const items = ['text', 'metric', 'table'];
+    expect(moveBuilderComponent(items, 0, 2)).toEqual(['metric', 'table', 'text']);
+    expect(items).toEqual(['text', 'metric', 'table']);
+  });
+  it('keeps the order unchanged for invalid or identical positions', () => {
+    const items = ['text', 'metric'];
+    expect(moveBuilderComponent(items, -1, 1)).toEqual(items);
+    expect(moveBuilderComponent(items, 0, 2)).toEqual(items);
+    expect(moveBuilderComponent(items, 1, 1)).toEqual(items);
   });
 });
