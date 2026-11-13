@@ -24,7 +24,7 @@ export class PlatformDocsController {
 
   @Get('document')
   async document(@Query('path') requestedPath?: string) {
-    if (!requestedPath || !/^(docs\/.+|README\.md|apps\/(api|web)\/README\.md)$/.test(requestedPath) || !requestedPath.endsWith('.md')) {
+    if (!requestedPath || requestedPath.split('/').includes('..') || !/^(docs\/.+|README\.md|apps\/(api|web)\/README\.md)$/.test(requestedPath) || !requestedPath.endsWith('.md')) {
       throw new NotFoundException('Documentation file not found.');
     }
     const root = this.repositoryRoot();
