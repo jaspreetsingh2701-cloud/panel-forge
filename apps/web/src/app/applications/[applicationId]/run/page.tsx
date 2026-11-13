@@ -65,7 +65,7 @@ export default function ApplicationRuntimePage() {
   const tenant = tenants[0];
   const [application, setApplication] = useState<Application | null>(null);
   const [components, setComponents] = useState<BuilderComponent[]>([]);
-  const [resourceData, setResourceData] = useState<Record<string, ResourceData>>({});
+  const [componentData, setComponentData] = useState<Record<string, ResourceData>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const greeting = user?.displayName?.trim() || user?.email.split('@')[0] || 'Account';
@@ -100,16 +100,17 @@ export default function ApplicationRuntimePage() {
           request<Resource[]>(base + '/resources'),
         ]);
         const savedComponents = Array.isArray(configuration.components) ? configuration.components : [];
-        const resourceIds = [...new Set(savedComponents.map(component => component.dataBinding?.resourceId).filter((id): id is string => Boolean(id)))];
-        const entries = await Promise.all(resourceIds.map(async resourceId => {
-          const component = savedComponents.find(item => item.dataBinding?.resourceId === resourceId);
+        const boundComponents = savedComponents.filter(component => component.dataBinding?.resourceId);
+        const entries = await Promise.all(boundComponents.map(async component => {
+          const resourceId = component.dataBinding?.resourceId;
+          if (!resourceId) return [component.id, { fields: [], records: [], aggregate: null }] as const;
           const resource = resources.find(item => item.id === resourceId);
-          if (!resource) return [resourceId, { fields: [], records: [], aggregate: null }] as const;
+          if (!resource) return [component.id, { fields: [], records: [], aggregate: null }] as const;
           const resourceBase = base + '/resources/' + resourceId;
           const [fields, records, aggregate] = await Promise.all([
             request<ResourceField[]>(resourceBase + '/fields'),
-            component?.type === 'table' ? request<{ items?: ResourceRecord[] }>(resourceBase + '/records?page=1&pageSize=10').then(result => Array.isArray(result.items) ? result.items : []) : Promise.resolve([] as ResourceRecord[]),
-            component && (component.type === 'metric' || component.type === 'chart')
+            component.type === 'table' ? request<{ items?: ResourceRecord[] }>(resourceBase + '/records?page=1&pageSize=10').then(result => Array.isArray(result.items) ? result.items : []) : Promise.resolve([] as ResourceRecord[]),
+            component.type === 'metric' || component.type === 'chart'
               ? (() => {
                   const params = new URLSearchParams({ operation: component.dataBinding?.aggregation ?? 'count' });
                   if (component.dataBinding?.field) params.set('field', component.dataBinding.field);
@@ -118,12 +119,12 @@ export default function ApplicationRuntimePage() {
                 })()
               : Promise.resolve(null),
           ]);
-          return [resourceId, { fields, records, aggregate }] as const;
+          return [component.id, { fields, records, aggregate }] as const;
         }));
         if (!cancelled) {
           setApplication(current);
           setComponents(savedComponents);
-          setResourceData(Object.fromEntries(entries));
+          setComponentData(Object.fromEntries(entries));
         }
       } catch (loadError) {
         if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'Could not load this application.');
@@ -154,7 +155,7 @@ export default function ApplicationRuntimePage() {
         {error && <p className="application-error" role="alert">{error}</p>}
         {loading ? <section className="applications-empty"><p>Loading saved application…</p></section> : error ? null : pageComponents.length === 0 ?
           <section className="applications-empty"><p className="eyebrow">EMPTY APPLICATION</p><h2>There is nothing to render yet.</h2><p>Add components in the builder, save your draft, then return here to see the runtime.</p><Link className="pf-button pf-button--primary" href={'/applications/' + applicationId + '/builder'}>Open builder →</Link></section> :
-          <div className="runtime-grid">{pageComponents.map(component => <div className={'runtime-grid-item runtime-grid-item--' + component.layout.width} key={component.id}><RuntimeComponent component={component} data={component.dataBinding?.resourceId ? resourceData[component.dataBinding.resourceId] : undefined} /></div>)}</div>}
+          <div className="runtime-grid">{pageComponents.map(component => <div className={'runtime-grid-item runtime-grid-item--' + component.layout.width} key={component.id}><RuntimeComponent component={component} data={componentData[component.id]} /></div>)}</div>}
       </div>
     </section>
   </main>;
