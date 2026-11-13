@@ -24,8 +24,8 @@ Phase 4 — Visual builder.
 | Batch | Status | Evidence |
 |---|---|---|
 | 4.1 Builder shell and component registry | Complete | Application-scoped editor shell, allowlisted component palette, in-memory canvas and property inspector; merged PR #22 |
-| 4.2 Canvas interactions and ordering | In progress | Accessible selection, keyboard-operable move controls, native drag-and-drop, removal and ordering tests; PR #23 |
-| 4.3 Responsive layout primitives | Planned | Page sections, containers, columns and responsive breakpoints |
+| 4.2 Canvas interactions and ordering | Complete | Accessible selection, keyboard-operable move controls, native drag-and-drop, removal and ordering tests; merged PR #23 |
+| 4.3 Responsive layout primitives | In progress | Full/half/third-width grid placement, responsive breakpoints and spacing controls; PR #24 |
 | 4.4 Resource-bound forms and tables | Planned | Configure forms and tables against application resources |
 | 4.5 Draft configuration persistence | Planned | Save, load and version draft page configuration |
 | 4.6 Preview and validation | Planned | Draft preview, validation feedback and safe unsupported-component states |
