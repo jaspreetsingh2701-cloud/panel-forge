@@ -11,7 +11,11 @@ describe('builder component registry', () => {
     expect(createBuilderComponent('metric', 'component-1')).toEqual({
       id: 'component-1', type: 'metric', title: 'Total orders',
       description: 'Example metric · data binding comes next', content: '128',
+      layout: { width: 'full', spacing: 'comfortable' },
     });
+  });
+  it('defaults components to a full-width comfortable layout', () => {
+    expect(createBuilderComponent('text', 'component-layout').layout).toEqual({ width: 'full', spacing: 'comfortable' });
   });
   it('returns no definition for an unknown component type', () => {
     expect(getBuilderComponentDefinition('unknown')).toBeUndefined();
