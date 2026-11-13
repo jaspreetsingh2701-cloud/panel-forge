@@ -1,6 +1,7 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
+import { SaveBuilderConfigurationDto } from './dto/save-builder-configuration.dto';
 
 @Injectable()
 export class ApplicationsService {
@@ -39,6 +40,53 @@ export class ApplicationsService {
       data: { tenantId, name: dto.name.trim(), description: dto.description?.trim() || null, template: dto.template ?? 'blank' },
       select: { id: true, name: true, description: true, template: true, status: true, createdAt: true, updatedAt: true },
     });
+  }
+
+  async getBuilderConfiguration(userId: string, tenantId: string, applicationId: string) {
+    await this.assertTenantAccess(userId, tenantId);
+    const application = await this.prisma.application.findFirst({
+      where: { id: applicationId, tenantId, status: 'DRAFT' },
+      select: { pageConfig: true, updatedAt: true },
+    });
+    if (!application) throw new NotFoundException('Application not found.');
+    return {
+      components: application.pageConfig ?? [],
+      updatedAt: application.updatedAt,
+    };
+  }
+
+  async saveBuilderConfiguration(
+    userId: string,
+    tenantId: string,
+    applicationId: string,
+    dto: SaveBuilderConfigurationDto,
+  ) {
+    await this.assertTenantManager(userId, tenantId);
+    const application = await this.prisma.application.findFirst({
+      where: { id: applicationId, tenantId, status: 'DRAFT' },
+      select: { id: true },
+    });
+    if (!application) throw new NotFoundException('Application not found.');
+
+    const result = await this.prisma.application.updateMany({
+      where: {
+        id: applicationId,
+        tenantId,
+        status: 'DRAFT',
+        updatedAt: new Date(dto.expectedUpdatedAt),
+      },
+      data: { pageConfig: dto.components as never },
+    });
+    if (result.count !== 1) {
+      throw new ConflictException('This application changed after you opened the builder. Reload the saved version before saving again.');
+    }
+
+    const saved = await this.prisma.application.findFirst({
+      where: { id: applicationId, tenantId, status: 'DRAFT' },
+      select: { pageConfig: true, updatedAt: true },
+    });
+    if (!saved) throw new NotFoundException('Application not found.');
+    return { components: saved.pageConfig ?? [], updatedAt: saved.updatedAt };
   }
 
   async archive(userId: string, tenantId: string, applicationId: string) {
