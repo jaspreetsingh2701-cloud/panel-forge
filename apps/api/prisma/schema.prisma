@@ -169,6 +169,7 @@ model Resource {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   fields ResourceField[]
+  relationSources ResourceField[] @relation("ResourceRelations")
   records DynamicRecord[]
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -187,7 +188,6 @@ model ResourceField {
   relationResourceId String? @map("relation_resource_id") @db.Uuid
   resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
   relationTarget Resource? @relation("ResourceRelations", fields: [relationResourceId], references: [id], onDelete: SetNull)
-  relationSources Resource[] @relation("ResourceRelations")
   position Int @default(0)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
