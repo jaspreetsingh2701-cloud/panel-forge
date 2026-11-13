@@ -220,7 +220,7 @@ export default function BuilderPage() {
               </article>)}
             </div>}
           </div>
-          <p className="builder-canvas-footnote">Reorder with the arrow controls or drag handle. Changes are saved to this application's draft configuration; publishing is not available yet.</p>
+          <p className="builder-canvas-footnote">Reorder with the arrow controls or drag handle. Changes are saved to the application draft configuration; publishing is not available yet.</p>
           {saveError && <p className="application-error builder-error" role="alert">{saveError} {saveConflict && <button className="pf-button pf-button--ghost pf-button--sm" type="button" onClick={() => window.location.reload()}>Reload saved version</button>}</p>}
           {saveMessage && !hasUnsavedChanges && <p className="builder-save-message" role="status">{saveMessage}</p>}
           {!canSave && hasUnsavedChanges && <p className="builder-save-message" role="status">Only workspace owners and admins can save application changes.</p>}
