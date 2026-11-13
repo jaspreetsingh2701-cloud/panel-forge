@@ -142,7 +142,7 @@ export default function BuilderPage() {
 
   const hasUnsavedChanges = stableSerialize(components) !== stableSerialize(savedComponents);
   const canSave = tenant?.role === 'OWNER' || tenant?.role === 'ADMIN';
-  const validationIssues = validateBuilderComponents(components, resources.map(resource => resource.id), resourceFields, selectedId, resourcesLoaded);
+  const validationIssues = validateBuilderComponents(components, resources.map(resource => resource.id), resourceFields, selectedId ?? undefined, resourcesLoaded);
   const selectedValidationIssues = validationIssues.filter(issue => issue.componentId === selectedId);
   const canUndo = historyAvailability.canUndo;
   const canRedo = historyAvailability.canRedo;
