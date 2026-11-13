@@ -75,15 +75,15 @@ The canvas is not a freeform layout engine. Phase 4.1 provides the editor shell;
 - Save explicitly; do not auto-save or imply that a draft has been published.
 - Restrict writes to active workspace owners and admins. Active workspace members may load the saved configuration.
 - Validate every component against the fixed registry contract at the API boundary: component IDs, type allowlist, supported text properties, layout width and spacing, and a maximum of 100 components.
-- Use the application's `updatedAt` value as an optimistic concurrency token. Reject stale saves with HTTP 409 instead of overwriting a newer version.
+- Use a dedicated, monotonically increasing `builderVersion` as an optimistic concurrency token. Reject stale saves with HTTP 409 instead of overwriting a newer version.
 - Warn before the browser tab is closed or refreshed while local edits are unsaved. On a stale-save conflict, ask the user to reload the saved version before continuing.
 - Keep configuration data-only. Do not accept executable code, arbitrary HTML, custom component names or arbitrary CSS.
 - Saving persists a draft configuration only. Publishing, runtime rendering and resource binding remain separate capabilities.
 
 ### API contract
 
-- `GET /api/v1/tenants/:tenantId/applications/:applicationId/builder` returns `components` and the current `updatedAt` token.
-- `PUT /api/v1/tenants/:tenantId/applications/:applicationId/builder` accepts `expectedUpdatedAt` and `components`, and returns the saved configuration with its new `updatedAt` token.
+- `GET /api/v1/tenants/:tenantId/applications/:applicationId/builder` returns `components` and the current `version` token.
+- `PUT /api/v1/tenants/:tenantId/applications/:applicationId/builder` accepts `expectedVersion` and `components`, and returns the saved configuration with its incremented `version` token.
 - A stale `expectedUpdatedAt` returns HTTP 409. The client must not silently retry with a newer token.
 
 ### Acceptance criteria
