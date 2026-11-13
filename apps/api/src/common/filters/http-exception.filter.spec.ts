@@ -3,7 +3,6 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
 import { HttpExceptionFilter } from './http-exception.filter';
 
 function createHttpContext(requestId = 'request-123') {
@@ -47,7 +46,7 @@ describe('HttpExceptionFilter', () => {
   });
 
   it('returns a safe response and logs a structured stacktrace for unexpected errors', () => {
-    const logger = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const logger = jest.spyOn(Logger.prototype, 'error').mockImplementation();
     const { host, payload, response } = createHttpContext();
     const exception = new Error('Database connection failed');
 
