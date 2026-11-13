@@ -36,12 +36,12 @@ describe('ApplicationsService', () => {
   });
 
   it('restores a saved builder configuration only after checking workspace membership', async () => {
-    const updatedAt = new Date('2026-11-13T10:00:00.000Z');
+    const version = 3;
     prisma.tenantMember.findFirst.mockResolvedValue({ id: 'membership-1' });
-    prisma.application.findFirst.mockResolvedValue({ pageConfig: [{ id: 'component-1' }], updatedAt });
+    prisma.application.findFirst.mockResolvedValue({ pageConfig: [{ id: 'component-1' }], builderVersion: version });
     await expect(service.getBuilderConfiguration('user-1', 'tenant-1', 'app-1')).resolves.toEqual({
       components: [{ id: 'component-1' }],
-      updatedAt,
+      version,
     });
     expect(prisma.application.findFirst).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 'app-1', tenantId: 'tenant-1', status: 'DRAFT' },
@@ -54,28 +54,28 @@ describe('ApplicationsService', () => {
     await expect(service.getBuilderConfiguration('user-1', 'tenant-1', 'foreign-app')).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('saves a validated configuration for a workspace owner using optimistic concurrency', async () => {
-    const expectedUpdatedAt = '2026-11-13T10:00:00.000Z';
-    const updatedAt = new Date('2026-11-13T10:01:00.000Z');
+  it('saves a validated configuration for a workspace owner using atomic version concurrency', async () => {
+    const expectedVersion = 3;
+    const version = 4;
     const components = [{ id: 'component-1', type: 'text' }];
     prisma.tenantMember.findFirst.mockResolvedValue({ role: 'OWNER' });
     prisma.application.findFirst
       .mockResolvedValueOnce({ id: 'app-1' })
-      .mockResolvedValueOnce({ pageConfig: components, updatedAt });
+      .mockResolvedValueOnce({ pageConfig: components, builderVersion: version });
     prisma.application.updateMany.mockResolvedValue({ count: 1 });
     await expect(service.saveBuilderConfiguration('user-1', 'tenant-1', 'app-1', {
-      expectedUpdatedAt, components,
-    } as never)).resolves.toEqual({ components, updatedAt });
+      expectedVersion, components,
+    } as never)).resolves.toEqual({ components, version });
     expect(prisma.application.updateMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 'app-1', tenantId: 'tenant-1', status: 'DRAFT', updatedAt: new Date(expectedUpdatedAt) },
-      data: { pageConfig: components },
+      where: { id: 'app-1', tenantId: 'tenant-1', status: 'DRAFT', builderVersion: expectedVersion },
+      data: { pageConfig: components, builderVersion: { increment: 1 } },
     }));
   });
 
   it('rejects saves from regular workspace members', async () => {
     prisma.tenantMember.findFirst.mockResolvedValue({ role: 'MEMBER' });
     await expect(service.saveBuilderConfiguration('user-1', 'tenant-1', 'app-1', {
-      expectedUpdatedAt: new Date().toISOString(), components: [],
+      expectedVersion: 0, components: [],
     } as never)).rejects.toBeInstanceOf(ForbiddenException);
     expect(prisma.application.updateMany).not.toHaveBeenCalled();
   });
@@ -85,7 +85,7 @@ describe('ApplicationsService', () => {
     prisma.application.findFirst.mockResolvedValue({ id: 'app-1' });
     prisma.application.updateMany.mockResolvedValue({ count: 0 });
     await expect(service.saveBuilderConfiguration('user-1', 'tenant-1', 'app-1', {
-      expectedUpdatedAt: '2026-11-13T09:00:00.000Z', components: [],
+      expectedVersion: 2, components: [],
     } as never)).rejects.toBeInstanceOf(ConflictException);
   });
 
