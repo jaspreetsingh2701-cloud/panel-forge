@@ -19,6 +19,11 @@ enum MembershipStatus {
   SUSPENDED
 }
 
+enum PlatformRole {
+  PLATFORM_USER
+  SUPER_ADMIN
+}
+
 enum TenantRole {
   OWNER
   ADMIN
@@ -50,6 +55,7 @@ enum ResourceFieldType {
 model User {
   id              String         @id @default(uuid()) @db.Uuid
   email           String         @unique @db.VarChar(320)
+  platformRole    PlatformRole   @default(PLATFORM_USER) @map("platform_role")
   passwordHash    String?        @map("password_hash") @db.VarChar(255)
   displayName     String?        @map("display_name") @db.VarChar(120)
   emailVerifiedAt DateTime?      @map("email_verified_at") @db.Timestamptz(6)
